@@ -1,0 +1,52 @@
+{
+  "rules": {
+    "rooms": {
+      "$room": {
+        ".read": "auth != null",
+        "host": {
+          ".write": "auth != null && !data.exists() && newData.val() === auth.uid"
+        },
+        "createdAt":      { ".write": "auth != null && data.parent().child('host').val() === auth.uid" },
+        "closed":         { ".write": "auth != null && data.parent().child('host').val() === auth.uid" },
+        "controlPin":     { ".write": "auth != null && data.parent().child('host').val() === auth.uid" },
+        "playlistName":   { ".write": "auth != null && data.parent().child('host').val() === auth.uid" },
+        "mode":           { ".write": "auth != null && data.parent().child('host').val() === auth.uid" },
+        "nbQuestions":    { ".write": "auth != null && data.parent().child('host').val() === auth.uid" },
+        "timer":          { ".write": "auth != null && data.parent().child('host').val() === auth.uid" },
+        "revealDuration": { ".write": "auth != null && data.parent().child('host').val() === auth.uid" },
+        "phase":          { ".write": "auth != null && data.parent().child('host').val() === auth.uid" },
+        "round":          { ".write": "auth != null && data.parent().child('host').val() === auth.uid" },
+        "controllerUid": {
+          ".write": "auth != null && (data.parent().child('host').val() === auth.uid || (!data.exists() && newData.val() === auth.uid))"
+        },
+        "cmd": {
+          ".write": "auth != null && (data.parent().child('host').val() === auth.uid || data.parent().child('controllerUid').val() === auth.uid)"
+        },
+        "players": {
+          ".write": "auth != null && data.parent().child('host').val() === auth.uid",
+          "$uid": {
+            ".write": "auth != null && ($uid === auth.uid || data.parent().parent().child('host').val() === auth.uid)"
+          }
+        },
+        "buzzes": {
+          ".write": "auth != null && data.parent().child('host').val() === auth.uid",
+          "$uid": {
+            ".write": "auth != null && $uid === auth.uid && !data.exists() && newData.exists() && data.parent().parent().child('round').child('status').val() === 'armed'"
+          }
+        },
+        "answers": {
+          ".write": "auth != null && data.parent().child('host').val() === auth.uid",
+          "$uid": {
+            ".write": "auth != null && $uid === auth.uid && !data.exists() && newData.exists() && data.parent().parent().child('round').child('status').val() === 'armed'"
+          }
+        }
+      }
+    },
+    "private_views": {
+      "$room": {
+        ".read": "auth != null && (root.child('rooms').child($room).child('host').val() === auth.uid || root.child('rooms').child($room).child('controllerUid').val() === auth.uid)",
+        ".write": "auth != null && root.child('rooms').child($room).child('host').val() === auth.uid"
+      }
+    }
+  }
+}
