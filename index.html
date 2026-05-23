@@ -924,9 +924,10 @@ input.code-input {
             <p class="muted">En attente de joueurs…</p>
           </div>
 
-          <div style="margin-top:16px;">
-            <button class="btn primary btn-xl" id="lobby-start" disabled>▶ Démarrer la partie</button>
-            <p class="muted" id="lobby-start-hint" style="text-align:center; margin-top:8px; font-size:13px;">
+          <div style="margin-top:16px; display:grid; gap:10px;">
+            <button class="btn mint btn-xl ready-pulse" id="lobby-host-ready">✅ Je suis prêt à animer</button>
+            <button class="btn primary btn-xl" id="lobby-start" disabled>▶ Démarrer manuellement</button>
+            <p class="muted" id="lobby-start-hint" style="text-align:center; margin-top:4px; font-size:13px;">
               Au moins 1 joueur doit être connecté.
             </p>
           </div>
@@ -1133,14 +1134,13 @@ input.code-input {
 //  CONFIG FIREBASE — REMPLIR ICI
 // ============================================================
 const firebaseConfig = {
-  apiKey: "AIzaSyBChD21JJPw_ZRM650G5nqdp408SO8itaQ",
-  authDomain: "buzzquizz-a407f.firebaseapp.com",
-  databaseURL: "https://buzzquizz-a407f-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "buzzquizz-a407f",
-  storageBucket: "buzzquizz-a407f.firebasestorage.app",
-  messagingSenderId: "60888755428",
-  appId: "1:60888755428:web:9e53ebc25995dedc2e50f1",
-  measurementId: "G-Z4BMMHRXKL"
+  apiKey: "COLLE_TA_CLE_ICI",
+  authDomain: "ton-projet.firebaseapp.com",
+  databaseURL: "https://ton-projet-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "ton-projet",
+  storageBucket: "ton-projet.appspot.com",
+  messagingSenderId: "000000000000",
+  appId: "1:000000000000:web:xxxxxxxxxxxxxxxx"
 };
 
 import { initializeApp }
@@ -1517,6 +1517,14 @@ $('create-launch').addEventListener('click', async () => {
 //  CRÉATION DE LA SALLE (côté projection)
 // ============================================================
 async function createRoom() {
+  // Reset état lobby (utile si on relance une partie)
+  autoLaunchTriggered = false;
+  if (autoLaunchTimer) { clearTimeout(autoLaunchTimer); autoLaunchTimer = null; }
+  const hostBtn = $('lobby-host-ready');
+  hostBtn.disabled = false;
+  hostBtn.classList.add('ready-pulse');
+  hostBtn.textContent = '✅ Je suis prêt à animer';
+
   let code, tries = 0, exists = true;
   do {
     code = makeRoomCode();
@@ -1533,6 +1541,7 @@ async function createRoom() {
     createdAt: serverTimestamp(),
     controlPin: State.controlPin,
     controllerUid: null,
+    hostReady: false,
     playlistName: State.playlist.name,
     mode: State.mode,
     nbQuestions: State.qcmConfig.nbQuestions,
@@ -1682,6 +1691,11 @@ async function joinAsPlayer() {
     $('pl-code').textContent = code;
     $('pl-emoji').textContent = State.myEmoji;
     $('pl-name').textContent = State.myName;
+    // Reset du bouton "prêt" au cas où on rejoint après avoir quitté
+    const rb = $('pl-ready');
+    rb.disabled = false;
+    rb.classList.add('ready-pulse');
+    rb.textContent = '✅ Je suis prêt !';
 
     listenRoom(code);
     showScreen('player-lobby');
@@ -1748,6 +1762,22 @@ async function joinAsControl() {
 // ============================================================
 $('lobby-start').addEventListener('click', startGame);
 
+// Bouton "Je suis prêt à animer" (hôte)
+$('lobby-host-ready').addEventListener('click', async () => {
+  if (!State.roomCode || State.role !== 'projection') return;
+  try {
+    await update(ref(db, 'rooms/' + State.roomCode), { hostReady: true });
+    const btn = $('lobby-host-ready');
+    btn.disabled = true;
+    btn.classList.remove('ready-pulse');
+    btn.textContent = '✓ Tu es prêt';
+    // Note : on ne lance pas la partie ici ; c'est tryAutoLaunch() qui le fait
+    //        quand le rendu détecte que tout le monde est prêt.
+  } catch (e) {
+    toast("Erreur : " + e.message);
+  }
+});
+
 async function startGame() {
   if (!State.roomCode || State.role !== 'projection') return;
   if (!State.lastState || !State.lastState.players) return toast('Pas de joueurs');
@@ -1756,7 +1786,34 @@ async function startGame() {
 
   // Phase = countdown
   await update(ref(db, 'rooms/' + State.roomCode), { phase: 'countdown' });
-  // Le rendu va déclencher l'écran countdown sur tous les rôles
+}
+
+// Auto-launch : appelé depuis renderLobby quand tous les joueurs ET l'hôte sont prêts.
+// Garde-fou pour ne déclencher qu'une seule fois.
+let autoLaunchTriggered = false;
+let autoLaunchTimer = null;
+function tryAutoLaunch(data) {
+  if (autoLaunchTriggered) return;
+  if (State.role !== 'projection') return;
+  if (!data || data.phase !== 'lobby') return;
+  if (!data.hostReady) return;
+
+  const players = Object.entries(data.players || {});
+  if (players.length < 1) return;
+  const allReady = players.every(([_, p]) => p.ready);
+  if (!allReady) return;
+
+  // Tout le monde prêt → on lance dans 1.5 s pour laisser le temps de voir l'état "tous prêts"
+  autoLaunchTriggered = true;
+  if (autoLaunchTimer) clearTimeout(autoLaunchTimer);
+  $('lobby-start-hint').innerHTML = '🚀 <b style="color:var(--mint);">Tout le monde est prêt — lancement…</b>';
+  autoLaunchTimer = setTimeout(() => { startGame(); }, 1500);
+}
+
+// Si quelqu'un quitte le lobby pendant le compte à rebours auto, on annule
+function cancelAutoLaunch() {
+  if (autoLaunchTimer) { clearTimeout(autoLaunchTimer); autoLaunchTimer = null; }
+  autoLaunchTriggered = false;
 }
 
 // Compte à rebours visuel (10s) - déclenché par le passage phase=countdown
@@ -2113,10 +2170,16 @@ function renderLobby(data) {
   const players = Object.entries(data.players || {});
   $('lobby-count').textContent = players.length;
   const ready = players.filter(([_, p]) => p.ready).length;
-  $('lobby-start-hint').textContent = players.length
-    ? (ready === players.length && players.length > 0
-        ? '✓ Tous les joueurs sont prêts'
-        : ready + ' / ' + players.length + ' joueurs prêts')
+  const hostReady = !!data.hostReady;
+
+  // Compteur global incluant l'hôte
+  const totalReady = ready + (hostReady ? 1 : 0);
+  const totalNeeded = players.length + 1;   // joueurs + hôte
+  const hintParts = [];
+  hintParts.push(`${totalReady} / ${totalNeeded} prêts (joueurs + animateur)`);
+  if (!hostReady) hintParts.push('Clique "Je suis prêt à animer" pour pouvoir lancer.');
+  $('lobby-start-hint').innerHTML = players.length
+    ? hintParts.join('<br>')
     : 'Au moins 1 joueur doit être connecté.';
 
   const list = $('lobby-players');
@@ -2137,6 +2200,14 @@ function renderLobby(data) {
   }
 
   $('lobby-start').disabled = players.length === 0;
+
+  // Si quelqu'un n'est plus prêt (ex. nouveau joueur arrive après lancement annulé)
+  // on annule un éventuel auto-launch en cours.
+  if (players.length === 0 || !hostReady || !players.every(([_, p]) => p.ready)) {
+    cancelAutoLaunch();
+  }
+  // Tente l'auto-launch (idempotent grâce au flag)
+  tryAutoLaunch(data);
 }
 
 // ---- RENDU PROJECTION (en jeu) ----
@@ -2460,7 +2531,8 @@ $('podium-replay').addEventListener('click', async () => {
 function renderPlayerLobby(data) {
   const players = Object.entries(data.players || {});
   const ready = players.filter(([_, p]) => p.ready).length;
-  $('pl-ready-status').textContent = `${ready} / ${players.length} joueurs prêts`;
+  const hostTxt = data.hostReady ? '✓ animateur prêt' : '… animateur pas prêt';
+  $('pl-ready-status').innerHTML = `${ready} / ${players.length} joueurs prêts<br>${hostTxt}`;
 }
 
 </script>
