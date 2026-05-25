@@ -1021,8 +1021,15 @@ input.code-input {
       <button class="link-btn" data-home>← Retour</button>
     </div>
     <div class="card">
-      <h2 style="font-size:24px;">Créer une partie</h2>
+      <h2 style="font-size:24px;">🎮 Créer une partie</h2>
       <p class="muted" style="margin-top:6px;">Configure ta partie puis lance.</p>
+
+      <!-- Pseudo + emoji du créateur (toujours, qu'il joue ou pas) -->
+      <label>Ton pseudo</label>
+      <input type="text" id="create-name" maxlength="20" placeholder="Ex : Camille" />
+
+      <label>Ton emoji</label>
+      <div class="emoji-picker" id="create-emoji-picker" style="max-height:140px;"></div>
 
       <label>Mode de jeu</label>
       <div class="option-group" id="opt-mode">
@@ -1036,15 +1043,15 @@ input.code-input {
       <!-- Toggle "Mode hôte affichage" -->
       <div class="toggle-row" style="margin-top:14px;">
         <div>
-          <div class="toggle-label">📺 Mode hôte (écran d'affichage)</div>
+          <div class="toggle-label">📺 Mode hôte d'affichage</div>
           <div class="toggle-desc" id="host-mode-desc">
-            Cet écran sert d'affichage public. Les joueurs rejoignent par QR code.
+            Cet écran sert d'affichage public uniquement. Tu ne joues pas, tu animes.
           </div>
         </div>
-        <div class="toggle-switch on" id="opt-host-mode"></div>
+        <div class="toggle-switch" id="opt-host-mode"></div>
       </div>
-      <p class="muted" id="host-mode-note" style="font-size:12px; margin-top:6px; display:none;">
-        ℹ Tu joueras toi-même sur cet écran, avec les autres joueurs.
+      <p class="muted" id="host-mode-note" style="font-size:12px; margin-top:6px;">
+        ℹ Désactivé : tu joues avec les autres directement sur cet appareil.
       </p>
 
       <label>Nombre de questions</label>
@@ -1374,6 +1381,21 @@ input.code-input {
 
     <div class="player-result" id="p-result"></div>
 
+    <!-- Contrôles hôte-joueur (visibles uniquement si role=host_player) -->
+    <div id="p-host-controls" style="display:none; margin: 12px 0; padding: 12px; background: var(--bg-soft); border: 1px dashed var(--accent-2); border-radius: 12px;">
+      <p class="muted" style="text-align:center; font-size:12px; margin-bottom:8px;">
+        🎬 Contrôles animateur
+      </p>
+      <div id="p-host-answer-reveal" style="display:none; margin-bottom:8px; text-align:center;">
+        <span style="font-size:11px; color:var(--accent-2); font-weight:700; letter-spacing:1px;">RÉPONSE</span>
+        <div id="p-host-answer-text" style="font-family:'Fraunces'; font-weight:900; font-size:18px; margin-top:2px;"></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn primary" id="p-host-next" style="font-size:14px; padding:10px;">▶ Question suivante</button>
+        <button class="btn mint" id="p-host-reveal" style="font-size:14px; padding:10px;" disabled>✓ Révéler</button>
+      </div>
+    </div>
+
     <!-- Barre de réactions emoji -->
     <div class="reactions-bar" id="reactions-bar">
       <button class="reaction-btn" data-emoji="👏">👏</button>
@@ -1528,7 +1550,7 @@ const State = {
   // Côté projection
   playlist: null,
   selectedPlaylistData: null,
-  selfPlay: false,  // mode "QCM sans hôte affichage" : l'animateur joue lui-même
+  hostMode: true,   // true = écran d'affichage public ; false = l'hôte joue aussi
   usedIndexes: new Set(),
   currentQuestionIndex: -1,
   controlPin: null,
@@ -1543,6 +1565,9 @@ const State = {
   // Côté joueur
   myEmoji: '⚡',
   myName: '',
+  // Côté hôte créateur
+  hostEmoji: '🎬',
+  hostName: '',
 
   // État courant reçu de Firebase
   lastState: null,
@@ -1587,6 +1612,15 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
   }[c]));
+}
+
+// Helpers de rôle
+// L'hôte qui joue aussi (role='host_player') doit agir comme un joueur dans la plupart des cas
+function isPlayerLike() {
+  return State.role === 'player' || State.role === 'host_player';
+}
+function isHostLike() {
+  return State.role === 'projection' || State.role === 'host_player';
 }
 
 // Étoiles flottantes en arrière-plan
@@ -1850,32 +1884,26 @@ function startCreate(mode) {
 
 // Met à jour l'UI selon le mode (Buzzer ou QCM)
 function applyModeUI(mode) {
-  // Bouton de mode actif
   document.querySelectorAll('#opt-mode .option-btn').forEach((b) =>
     b.classList.toggle('active', b.dataset.val === mode));
-  // Hint sous les boutons
   $('mode-hint').innerHTML = mode === 'qcm'
-    ? '🎯 <b>QCM</b> : 4 réponses, automatique avec timer. Score : 50 + temps_restant × 10 par bonne réponse.'
-    : '🔔 <b>Buzzer</b> : 1er à buzzer répond à l\'oral. Tu pilotes depuis ton téléphone.';
-  // Options QCM uniquement
+    ? '🎯 <b>QCM</b> : 4 réponses, timer automatique. Score : 50 + temps_restant × 10 par bonne réponse.'
+    : '🔔 <b>Buzzer</b> : le 1er à buzzer répond à l\'oral. Tu valides et passes à la suivante.';
   $('opt-qcm-only').style.display = mode === 'qcm' ? '' : 'none';
-  // Toggle Hôte : Buzzer = forcé ON, QCM = libre
+  // Le toggle Hôte est toujours libre (Buzzer ET QCM)
   const hostTog = $('opt-host-mode');
-  if (mode === 'buzzer') {
-    hostTog.classList.add('on');
-    hostTog.classList.add('disabled');
-    $('host-mode-desc').textContent = 'Obligatoire en mode Buzzer : cet écran sert d\'affichage, tu pilotes depuis ton téléphone.';
-    $('host-mode-note').style.display = 'none';
-  } else {
-    hostTog.classList.remove('disabled');
-    $('host-mode-desc').textContent = 'Cet écran sert d\'affichage public. Les joueurs rejoignent par QR code.';
-    updateHostModeNote();
-  }
+  hostTog.classList.remove('disabled');
+  $('host-mode-desc').textContent = 'Cet écran sert d\'affichage public uniquement. Tu ne joues pas, tu animes.';
+  updateHostModeNote();
 }
 
 function updateHostModeNote() {
   const isOn = $('opt-host-mode').classList.contains('on');
-  $('host-mode-note').style.display = isOn ? 'none' : '';
+  if (isOn) {
+    $('host-mode-note').textContent = 'ℹ Tu seras juste un écran. Les joueurs scannent le QR code pour rejoindre.';
+  } else {
+    $('host-mode-note').textContent = 'ℹ Tu joues directement sur cet appareil avec les autres joueurs.';
+  }
 }
 
 // Boutons changement de mode dans l'écran Créer
@@ -2035,18 +2063,16 @@ $('create-launch').addEventListener('click', async () => {
     State.teamsConfig = { enabled: false, list: [] };
   }
 
-  // Mode hôte affichage (toggle ON = écran de projection séparé)
+  // Pseudo + emoji du créateur
+  State.hostName = ($('create-name').value || '').trim().slice(0, 20);
+  if (!State.hostName) { toast('Entre ton pseudo'); return; }
+  // (State.hostEmoji déjà mis à jour par le picker)
+
+  // Mode hôte affichage
   const hostMode = $('opt-host-mode').classList.contains('on');
-  State.selfPlay = !hostMode && State.mode === 'qcm';
-  // Note : en mode buzzer, le toggle est forcé ON donc selfPlay reste false
+  State.hostMode = hostMode;
 
-  // Si selfPlay : on demande pseudo + emoji avant
-  if (State.selfPlay) {
-    showSelfPlaySetup();
-    return;
-  }
-
-  // Crée la salle (mode hôte affichage classique)
+  // Crée la salle. L'hôte est ajouté à la liste players s'il joue aussi.
   try {
     await createRoom();
     showScreen('lobby');
@@ -2054,28 +2080,6 @@ $('create-launch').addEventListener('click', async () => {
     toast("Impossible de créer la salle : " + e.message);
   }
 });
-
-// ============================================================
-//  SELF-PLAY (QCM sans hôte affichage)
-// ============================================================
-// L'animateur joue lui-même : on lui demande son pseudo + emoji, on crée la salle,
-// puis on le fait rejoindre comme joueur immédiatement.
-function showSelfPlaySetup() {
-  // On réutilise l'écran join avec une variante : un sous-titre adapté + bouton custom
-  $('join-code').value = '__selfplay__';   // valeur sentinelle (cachée par CSS)
-  $('join-code').style.display = 'none';
-  document.querySelectorAll('label[for="join-code"], label').forEach((lbl) => {
-    if (lbl.textContent.trim() === 'Code de la salle') lbl.style.display = 'none';
-  });
-  // Modifie le titre et le bouton
-  document.querySelector('#screen-join h2').textContent = 'Ta partie QCM';
-  const btn = $('join-btn');
-  btn.textContent = '▶ Lancer la partie';
-  btn.dataset.selfplay = '1';
-  // Pseudo / emoji déjà gérés par l'écran join
-  showScreen('join');
-  $('join-name').focus();
-}
 
 // ============================================================
 //  CRÉATION DE LA SALLE (côté projection)
@@ -2098,10 +2102,27 @@ async function createRoom() {
 
   State.controlPin = makePin();
   State.roomCode = code;
-  State.role = 'projection';
+  // Rôle : 'projection' si écran d'affichage, sinon 'host_player' (héberge ET joue)
+  State.role = State.hostMode ? 'projection' : 'host_player';
+
+  // Si l'hôte joue, on le met aussi dans la liste players
+  const initialPlayers = {};
+  if (!State.hostMode) {
+    initialPlayers[State.uid] = {
+      name: State.hostName,
+      emoji: State.hostEmoji,
+      score: 0, ready: false,
+      joinedAt: serverTimestamp(),
+      connected: true,
+      isHost: true,
+    };
+  }
 
   await set(ref(db, 'rooms/' + code), {
     host: State.uid,
+    hostName: State.hostName,
+    hostEmoji: State.hostEmoji,
+    hostMode: State.hostMode,    // true = écran public ; false = hôte joueur
     createdAt: serverTimestamp(),
     controlPin: State.controlPin,
     controllerUid: null,
@@ -2119,10 +2140,15 @@ async function createRoom() {
     round: {
       status: 'idle', question: '', choices: null, correct: -1, answer: '', number: 0,
     },
-    players: {},
+    players: initialPlayers,
     buzzes: {},
     answers: {},
   });
+
+  // Si l'hôte joue, on déconnecte aussi sa "connected" en sortie
+  if (!State.hostMode) {
+    onDisconnect(ref(db, 'rooms/' + code + '/players/' + State.uid + '/connected')).set(false);
+  }
 
   onDisconnect(ref(db, 'rooms/' + code + '/closed')).set(true);
 
@@ -2149,8 +2175,9 @@ async function createRoom() {
     QRCode.toCanvas($('lobby-qr'), url, { width: 200, margin: 1 }, () => {});
   }
 
-  // PIN visible uniquement en buzzer
-  $('lobby-pin-card').style.display = State.mode === 'buzzer' ? '' : 'none';
+  // PIN visible uniquement en mode buzzer AVEC hôte d'affichage
+  // (pas de contrôle distant si l'hôte joue lui-même)
+  $('lobby-pin-card').style.display = (State.mode === 'buzzer' && State.hostMode) ? '' : 'none';
 
   // Listen room
   listenRoom(code);
@@ -2161,10 +2188,10 @@ async function createRoom() {
 // ============================================================
 function listenRoom(code) {
   stopListening();
-  if (State.role === 'projection' || State.role === 'control') {
+  if (isHostLike() || State.role === 'control') {
     State.unsubPrivate = onValue(ref(db, 'private_views/' + code), (snap) => {
       State.latestPrivateView = snap.exists() ? snap.val() : null;
-      render();   // re-render pour màj de la réponse côté contrôle
+      render();
     }, () => { /* erreur d'autorisation : OK */ });
   }
   State.unsubRoom = onValue(ref(db, 'rooms/' + code), (snap) => {
@@ -2173,7 +2200,7 @@ function listenRoom(code) {
       leaveAll(); showScreen('menu'); return;
     }
     const data = snap.val();
-    if (data.closed && State.role !== 'projection') {
+    if (data.closed && !isHostLike()) {
       toast("La partie a été fermée par l'animateur");
       leaveAll(); showScreen('menu'); return;
     }
@@ -2189,7 +2216,7 @@ function stopListening() {
 }
 
 async function closeRoom() {
-  if (State.role === 'projection' && State.roomCode) {
+  if (isHostLike() && State.roomCode) {
     await remove(ref(db, 'rooms/' + State.roomCode)).catch(() => {});
     await remove(ref(db, 'private_views/' + State.roomCode)).catch(() => {});
   }
@@ -2202,7 +2229,8 @@ function leaveAll() {
   seenReactions.clear();
   reactionsFirstScan = true;
   prevLeader = null; prevPhase = null; prevStatus = null; prevFirstBuzzer = null;
-  if (State.role === 'player' && State.roomCode && State.uid) {
+  // Player ou host_player : on retire de la liste players
+  if ((State.role === 'player' || State.role === 'host_player') && State.roomCode && State.uid) {
     remove(ref(db, 'rooms/' + State.roomCode + '/players/' + State.uid)).catch(() => {});
     remove(ref(db, 'rooms/' + State.roomCode + '/buzzes/' + State.uid)).catch(() => {});
     remove(ref(db, 'rooms/' + State.roomCode + '/answers/' + State.uid)).catch(() => {});
@@ -2215,22 +2243,27 @@ function leaveAll() {
 // ============================================================
 //  REJOINDRE — JOUEUR
 // ============================================================
-function setupEmojiPicker() {
-  const wrap = $('emoji-picker');
+// Setup d'un picker emoji générique
+// targetVar : 'myEmoji' (join) ou 'hostEmoji' (create)
+function setupEmojiPicker(wrapId, targetVar, defaultEmoji = '⚡') {
+  const wrap = $(wrapId);
+  if (!wrap) return;
   wrap.innerHTML = EMOJIS.map((e) =>
     `<button class="emoji-pick" data-emoji="${e}">${e}</button>`).join('');
-  // Sélection par défaut : éclair
-  State.myEmoji = '⚡';
-  wrap.querySelector('[data-emoji="⚡"]')?.classList.add('selected');
+  State[targetVar] = defaultEmoji;
+  wrap.querySelector('[data-emoji="' + defaultEmoji + '"]')?.classList.add('selected');
   wrap.addEventListener('click', (ev) => {
     const btn = ev.target.closest('.emoji-pick');
     if (!btn) return;
     wrap.querySelectorAll('.emoji-pick').forEach((b) => b.classList.remove('selected'));
     btn.classList.add('selected');
-    State.myEmoji = btn.dataset.emoji;
+    State[targetVar] = btn.dataset.emoji;
   });
 }
-setupEmojiPicker();
+// Picker pour le créateur (créer une partie)
+setupEmojiPicker('create-emoji-picker', 'hostEmoji', '🎬');
+// Picker pour le joueur (rejoindre une partie)
+setupEmojiPicker('emoji-picker', 'myEmoji', '⚡');
 
 $('join-code').addEventListener('input', (e) => {
   e.target.value = e.target.value.toUpperCase().replace(/[^A-Z]/g, '');
@@ -2242,11 +2275,6 @@ $('join-name').addEventListener('keydown', (e) => { if (e.key === 'Enter') joinA
 async function joinAsPlayer() {
   const name = $('join-name').value.trim();
   if (!name) return toast('Entre ton pseudo');
-
-  // Mode selfPlay : pas de code à entrer, on crée la salle ici
-  if ($('join-btn').dataset.selfplay === '1') {
-    return await launchSelfPlay(name);
-  }
 
   const code = $('join-code').value.trim();
   if (code.length !== 4) return toast('Code = 4 lettres');
@@ -2284,51 +2312,6 @@ async function joinAsPlayer() {
     toast(e.message);
   } finally {
     $('join-btn').disabled = false;
-  }
-}
-
-// SelfPlay : combo création de salle + auto-rejoindre comme joueur
-async function launchSelfPlay(name) {
-  $('join-btn').disabled = true;
-  $('join-btn').textContent = 'Création…';
-  try {
-    State.myName = name.slice(0, 20);
-    // 1) Créer la salle (en tant que projection)
-    await createRoom();
-
-    // 2) Pour devenir aussi joueur, on doit avoir un autre uid... or on n'a qu'un seul auth.
-    //    Astuce : on enregistre l'hôte comme joueur sous son propre uid.
-    //    Les règles autorisent (uid === auth.uid) sur players/$uid donc OK.
-    const pRef = ref(db, 'rooms/' + State.roomCode + '/players/' + State.uid);
-    await set(pRef, {
-      name: State.myName, emoji: State.myEmoji,
-      score: 0, ready: true, joinedAt: serverTimestamp(),
-      connected: true,
-      isHostPlayer: true,
-    });
-    onDisconnect(child(pRef, 'connected')).set(false);
-
-    // 3) Marquer aussi hostReady : on va lancer direct sans lobby
-    await update(ref(db, 'rooms/' + State.roomCode), { hostReady: true });
-
-    // 4) Le rôle reste "projection" pour piloter la boucle QCM, mais on affiche l'écran joueur.
-    //    Comme on est projection, on rendra dans l'écran projection... non : on veut l'écran joueur.
-    //    Solution : on bascule manuellement l'écran après le lancement.
-    State.selfPlay = true;
-    $('pl-code').textContent = State.roomCode;
-    $('pl-emoji').textContent = State.myEmoji;
-    $('pl-name').textContent = State.myName;
-
-    // 5) Lance la partie immédiatement (countdown puis play)
-    await update(ref(db, 'rooms/' + State.roomCode), { phase: 'countdown' });
-    // L'écran countdown va s'afficher (via handlePhaseTransition), puis on bascule sur player
-  } catch (e) {
-    toast("Erreur : " + e.message);
-  } finally {
-    $('join-btn').disabled = false;
-    $('join-btn').textContent = 'Entrer dans la partie';
-    $('join-btn').dataset.selfplay = '';
-    $('join-code').style.display = '';
   }
 }
 
@@ -2390,7 +2373,7 @@ $('lobby-start').addEventListener('click', startGame);
 
 // Bouton "Je suis prêt à animer" (hôte)
 $('lobby-host-ready').addEventListener('click', async () => {
-  if (!State.roomCode || State.role !== 'projection') return;
+  if (!State.roomCode || !isHostLike()) return;
   try {
     await update(ref(db, 'rooms/' + State.roomCode), { hostReady: true });
     const btn = $('lobby-host-ready');
@@ -2405,7 +2388,7 @@ $('lobby-host-ready').addEventListener('click', async () => {
 });
 
 async function startGame() {
-  if (!State.roomCode || State.role !== 'projection') return;
+  if (!State.roomCode || !isHostLike()) return;
   if (!State.lastState || !State.lastState.players) return toast('Pas de joueurs');
   const nb = Object.keys(State.lastState.players).length;
   if (nb < 1) return toast('Au moins 1 joueur doit être connecté');
@@ -2420,7 +2403,7 @@ let autoLaunchTriggered = false;
 let autoLaunchTimer = null;
 function tryAutoLaunch(data) {
   if (autoLaunchTriggered) return;
-  if (State.role !== 'projection') return;
+  if (!isHostLike()) return;
   if (!data || data.phase !== 'lobby') return;
   if (!data.hostReady) return;
 
@@ -2465,7 +2448,7 @@ function startCountdownAnimation() {
       clearInterval(countdownTimer); countdownTimer = null;
       $('screen-countdown').classList.remove('active');
       // Côté projection : on lance la phase 'playing'
-      if (State.role === 'projection') startPlayingPhase();
+      if (isHostLike()) startPlayingPhase();
       return;
     }
     $('cd-num').textContent = n;
@@ -2493,7 +2476,7 @@ async function startPlayingPhase() {
 //  LOGIQUE DU JEU (côté projection)
 // ============================================================
 async function nextQuestion() {
-  if (State.role !== 'projection' || !State.playlist) return;
+  if (!isHostLike() || !State.playlist) return;
 
   const remaining = State.playlist.questions
     .map((_, i) => i)
@@ -2531,7 +2514,7 @@ async function nextQuestion() {
 }
 
 async function revealAnswer() {
-  if (State.role !== 'projection' || State.currentQuestionIndex < 0) return;
+  if (!isHostLike() || State.currentQuestionIndex < 0) return;
   const q = State.playlist.questions[State.currentQuestionIndex];
 
   const upd = { status: 'revealed' };
@@ -2583,14 +2566,14 @@ async function distributeScores() {
 }
 
 async function replayCurrentQuestion() {
-  if (State.role !== 'projection') return;
+  if (!isHostLike()) return;
   await update(ref(db, 'rooms/' + State.roomCode + '/round'), { status: 'armed', correct: -1, answer: '' });
   await remove(ref(db, 'rooms/' + State.roomCode + '/buzzes')).catch(() => {});
   await remove(ref(db, 'rooms/' + State.roomCode + '/answers')).catch(() => {});
 }
 
 async function finishGame() {
-  if (State.role !== 'projection') return;
+  if (!isHostLike()) return;
   await update(ref(db, 'rooms/' + State.roomCode), { phase: 'finished' });
 }
 
@@ -2610,7 +2593,7 @@ function stopQcmLoop() {
 }
 
 async function startQcmLoop() {
-  if (State.role !== 'projection' || State.mode !== 'qcm') return;
+  if (!isHostLike() || State.mode !== 'qcm') return;
   State.qcmLoop.running = true;
   $('proj-countdown').style.display = '';
   $('proj-timer-bar').style.display = '';
@@ -2671,7 +2654,7 @@ function updateProjCountdown(remaining, total) {
 //  COTÉ JOUEUR (en jeu)
 // ============================================================
 $('buzzer').addEventListener('click', async () => {
-  if (!State.roomCode || (State.role !== 'player' && !(State.role === 'projection' && State.selfPlay))) return;
+  if (!State.roomCode || !isPlayerLike()) return;
   const tapTime = serverNow();
   try {
     await set(ref(db, 'rooms/' + State.roomCode + '/buzzes/' + State.uid), {
@@ -2695,7 +2678,7 @@ function setupQcmPlayerGrid() {
     btn.dataset.idx = i;
     btn.innerHTML = `<span class="qcm-letter">${['A','B','C','D'][i]}</span><span class="qcm-text">…</span>`;
     btn.addEventListener('click', async () => {
-      if (!State.roomCode || (State.role !== 'player' && !(State.role === 'projection' && State.selfPlay))) return;
+      if (!State.roomCode || !isPlayerLike()) return;
       const tapTime = serverNow();
       try {
         await set(ref(db, 'rooms/' + State.roomCode + '/answers/' + State.uid), {
@@ -2713,6 +2696,27 @@ function setupQcmPlayerGrid() {
 }
 setupQcmPlayerGrid();
 
+// Contrôles host-joueur (mode buzzer)
+$('p-host-next').addEventListener('click', async () => {
+  if (State.role !== 'host_player') return;
+  $('p-host-next').disabled = true;
+  try {
+    await nextQuestion();
+  } catch (e) {
+    toast("Erreur : " + e.message);
+  } finally {
+    $('p-host-next').disabled = false;
+  }
+});
+$('p-host-reveal').addEventListener('click', async () => {
+  if (State.role !== 'host_player') return;
+  try {
+    await revealAnswer();
+  } catch (e) {
+    toast("Erreur : " + e.message);
+  }
+});
+
 // ============================================================
 //  RÉACTIONS EMOJI VOLANTES
 // ============================================================
@@ -2721,7 +2725,7 @@ setupQcmPlayerGrid();
 $('reactions-bar').addEventListener('click', async (e) => {
   const btn = e.target.closest('.reaction-btn');
   if (!btn) return;
-  if ((State.role !== 'player' && !(State.role === 'projection' && State.selfPlay)) || !State.roomCode || !State.uid) return;
+  if (!isPlayerLike() || !State.roomCode || !State.uid) return;
   // Throttle : pas plus d'une réaction toutes les 500 ms par utilisateur
   const now = Date.now();
   if (State.lastReactionAt && now - State.lastReactionAt < 500) return;
@@ -2773,7 +2777,7 @@ let reactionsCleanupTimer = null;
 function startReactionsCleanup() {
   if (reactionsCleanupTimer) return;
   reactionsCleanupTimer = setInterval(async () => {
-    if (State.role !== 'projection' || !State.roomCode || !State.lastState) return;
+    if (!isHostLike() || !State.roomCode || !State.lastState) return;
     const reactions = State.lastState.reactions || {};
     const cutoff = Date.now() - 8000;   // garder 8s de réactions
     const toDelete = [];
@@ -2811,7 +2815,7 @@ let prevStatus = null;
 let prevFirstBuzzer = null;
 
 function detectDynEvents(data) {
-  if (!data || State.role !== 'projection') return;
+  if (!data || !isHostLike()) return;
 
   // Évènement : quelqu'un buzze en premier (mode buzzer)
   if (data.mode === 'buzzer' && data.round?.status === 'armed') {
@@ -2897,7 +2901,7 @@ function render() {
   handlePhaseTransition(data);
 
   // 2) Côté projection : écoute les cmd du contrôleur
-  if (State.role === 'projection' && data.cmd && data.cmd.ts) {
+  if (isHostLike() && data.cmd && data.cmd.ts) {
     handleControlCommand(data.cmd.name, data.cmd.ts);
   }
 
@@ -2907,15 +2911,19 @@ function render() {
   detectDynEvents(data);
 
   // 5) Rendu selon le rôle
+  // role='projection' : seulement l'écran d'affichage public
+  // role='host_player' : héberge ET joue → comme un joueur normal
+  // role='player' : joueur classique
+  // role='control' : contrôle distant
   if (State.role === 'projection') {
-    if (State.selfPlay) {
-      // Mode self-play : on est techniquement projection mais on affiche l'écran joueur
-      if ($('screen-player').classList.contains('active')) renderPlayer(data);
-      // (pas de lobby en self-play, on lance direct)
-    } else {
-      if ($('screen-lobby').classList.contains('active')) renderLobby(data);
-      else renderProjection(data);
-    }
+    if ($('screen-lobby').classList.contains('active')) renderLobby(data);
+    else renderProjection(data);
+  }
+  if (State.role === 'host_player') {
+    // Même écrans qu'un joueur, mais avec quelques permissions admin (démarrer, fermer)
+    if ($('screen-lobby').classList.contains('active')) renderLobby(data);
+    else if ($('screen-player-lobby').classList.contains('active')) renderPlayerLobby(data);
+    else renderPlayer(data);
   }
   if (State.role === 'control') renderControl(data);
   if (State.role === 'player') {
@@ -2930,25 +2938,27 @@ function handlePhaseTransition(data) {
     startCountdownAnimation();
   }
   if (phase === 'playing') {
-    // Mode selfPlay : on bascule sur l'écran joueur même si role=projection
-    if (State.selfPlay && State.role === 'projection') {
+    // L'hôte projection va sur l'écran de projection
+    if (State.role === 'projection' && !$('screen-projection').classList.contains('active')) {
+      showScreen('projection');
+    }
+    // L'hôte-joueur va sur l'écran joueur, ET il lance la boucle QCM en arrière-plan
+    if (State.role === 'host_player') {
       if (!$('screen-player').classList.contains('active')) {
         showScreen('player');
       }
-      // ET on lance la boucle QCM en tâche de fond
       if (State.mode === 'qcm' && !State.qcmLoop.running) {
         startQcmLoop();
+      } else if (State.mode === 'buzzer') {
+        // En buzzer, on déclenche aussi la 1ère question via nextQuestion()
+        // (idem qu'en mode projection — voir startPlayingPhase)
       }
-    } else {
-      if (State.role === 'projection' && !$('screen-projection').classList.contains('active')) {
-        showScreen('projection');
-      }
-      if (State.role === 'control' && !$('screen-control').classList.contains('active')) {
-        showScreen('control');
-      }
-      if (State.role === 'player' && !$('screen-player').classList.contains('active')) {
-        showScreen('player');
-      }
+    }
+    if (State.role === 'control' && !$('screen-control').classList.contains('active')) {
+      showScreen('control');
+    }
+    if (State.role === 'player' && !$('screen-player').classList.contains('active')) {
+      showScreen('player');
     }
   }
   if (phase === 'finished' && !$('screen-podium').classList.contains('active')) {
@@ -3143,6 +3153,35 @@ function renderPlayer(data) {
     $('p-buzzer-view').style.display = '';
     $('p-qcm-view').style.display = 'none';
     renderPlayerBuzzer(data);
+  }
+
+  // Contrôles hôte-joueur (visibles seulement si role=host_player)
+  const hostControls = $('p-host-controls');
+  if (State.role === 'host_player') {
+    hostControls.style.display = '';
+    // En QCM tout est auto donc on cache les contrôles (la boucle tourne seule)
+    // En Buzzer c'est l'hôte qui clique « suivant » et « révéler »
+    if (data.mode === 'qcm') {
+      hostControls.style.display = 'none';
+    } else {
+      // Mode buzzer : montrer la réponse à l'hôte (depuis State.playlist en local)
+      if (round.question && State.playlist && State.currentQuestionIndex >= 0) {
+        const q = State.playlist.questions[State.currentQuestionIndex];
+        if (q) {
+          $('p-host-answer-reveal').style.display = '';
+          $('p-host-answer-text').textContent = q.a || '—';
+        }
+      } else {
+        $('p-host-answer-reveal').style.display = 'none';
+      }
+      const hasQ = !!round.question;
+      $('p-host-reveal').disabled = !hasQ || round.status === 'revealed';
+      $('p-host-next').textContent = (round.number || 0) === 0
+        ? '▶ Démarrer la 1ère question'
+        : '▶ Question suivante';
+    }
+  } else {
+    hostControls.style.display = 'none';
   }
 
   // Vibration à l'armement
@@ -3407,7 +3446,7 @@ function spawnConfetti() {
 $('podium-home').addEventListener('click', () => { leaveAll(); showScreen('menu'); });
 $('podium-replay').addEventListener('click', async () => {
   // Si on était la projection, on relance une nouvelle partie avec la même playlist
-  if (State.role === 'projection' && State.playlist) {
+  if (isHostLike() && State.playlist) {
     await closeRoom();
     State.usedIndexes = new Set();
     State.currentQuestionIndex = -1;
