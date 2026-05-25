@@ -685,6 +685,72 @@ input.code-input {
 .qcm-btn:disabled { cursor: not-allowed; }
 .qcm-btn.chosen { outline: 4px solid #fff; }
 .qcm-btn.not-chosen { opacity: .35; }
+.qcm-btn.correct { outline: 4px solid var(--mint); transform: scale(1.02); }
+.qcm-btn.wrong { opacity: .35; }
+
+/* Barre d'info joueur QCM (numéro + timer) */
+.p-qcm-topbar {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 14px 4px; gap: 10px;
+}
+.p-qcm-qnum {
+  font-family: 'Outfit'; font-weight: 700; font-size: 13px;
+  color: var(--ink-dim); letter-spacing: 1.2px; text-transform: uppercase;
+}
+.p-qcm-timer {
+  display: inline-flex; align-items: baseline; gap: 4px;
+  background: var(--bg-soft); border: 1px solid var(--line);
+  padding: 6px 14px; border-radius: 999px;
+  font-family: 'Fraunces'; font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+.p-qcm-timer .p-cd-num { font-size: 20px; color: var(--mint); }
+.p-qcm-timer .p-cd-lbl { font-family: 'Outfit'; font-size: 11px; color: var(--ink-dim); font-weight: 700; }
+.p-qcm-timer.warn .p-cd-num { color: var(--accent-2); }
+.p-qcm-timer.danger .p-cd-num { color: var(--accent); animation: pulse 0.6s infinite; }
+
+.p-timer-bar {
+  height: 6px; background: var(--bg-soft); border-radius: 999px;
+  overflow: hidden; margin: 4px 14px 6px;
+}
+.p-timer-bar .p-timer-fill {
+  height: 100%; background: linear-gradient(90deg, var(--mint), var(--accent-2), var(--accent));
+  transition: width 0.5s linear;
+}
+
+/* Mini-classement joueur */
+.p-mini-rank {
+  margin: 14px 12px 4px;
+  background: var(--bg-soft); border: 1px solid var(--line);
+  border-radius: 14px; padding: 12px 14px;
+}
+.p-mini-rank-title {
+  font-family: 'Outfit'; font-weight: 700; font-size: 12px;
+  color: var(--ink-dim); letter-spacing: 1px; text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.p-mini-rank-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 5px 0; font-size: 14px;
+}
+.p-mini-rank-row.is-me {
+  background: rgba(255,209,102,.10);
+  margin: 0 -8px; padding: 5px 8px; border-radius: 8px;
+}
+.p-mini-rank-row .mr-rank {
+  font-family: 'Fraunces'; font-weight: 900; font-size: 14px;
+  width: 22px; text-align: center;
+  color: var(--ink-dim);
+}
+.p-mini-rank-row.rank-1 .mr-rank { color: var(--gold); }
+.p-mini-rank-row.rank-2 .mr-rank { color: var(--silver); }
+.p-mini-rank-row.rank-3 .mr-rank { color: var(--bronze); }
+.p-mini-rank-row .mr-emoji { font-size: 18px; }
+.p-mini-rank-row .mr-name { flex: 1; font-weight: 700; }
+.p-mini-rank-row .mr-pts {
+  font-family: 'Fraunces'; font-weight: 900; font-size: 14px;
+  color: var(--accent-2); font-variant-numeric: tabular-nums;
+}
 
 .player-question-screen {
   font-family: 'Fraunces'; font-weight: 600;
@@ -836,13 +902,13 @@ input.code-input {
   100% { transform: translateY(-60vh) scale(1) rotate(360deg); opacity: 0; }
 }
 
-/* Bandeau de message dynamique */
+/* Bandeau de message dynamique (en bas pour ne pas masquer les questions) */
 .dyn-msg {
-  position: fixed; left: 50%; top: 14%;
+  position: fixed; left: 50%; bottom: 90px;
   background: linear-gradient(135deg, var(--accent), var(--accent-2));
   color: #fff; font-family: 'Fraunces'; font-weight: 900;
-  font-size: clamp(18px, 3.5vw, 28px);
-  padding: 14px 26px; border-radius: 16px;
+  font-size: clamp(16px, 2.8vw, 22px);
+  padding: 12px 22px; border-radius: 14px;
   box-shadow: 0 18px 40px rgba(0,0,0,.5);
   z-index: 180; max-width: 92vw; text-align: center;
   opacity: 0; pointer-events: none;
@@ -1375,8 +1441,24 @@ input.code-input {
 
     <!-- QCM view -->
     <div id="p-qcm-view" style="display:none;">
+      <!-- Bandeau d'info : numéro de question + timer -->
+      <div class="p-qcm-topbar">
+        <span class="p-qcm-qnum" id="p-qcm-qnum">— / —</span>
+        <span class="p-qcm-timer" id="p-qcm-timer">
+          <span class="p-cd-num" id="p-cd-num">30</span>
+          <span class="p-cd-lbl">s</span>
+        </span>
+      </div>
+      <div class="p-timer-bar"><div class="p-timer-fill" id="p-timer-fill" style="width:100%"></div></div>
+
       <div class="player-question-screen" id="p-qcm-question">…</div>
       <div class="qcm-grid" id="p-qcm-grid"></div>
+
+      <!-- Mini-classement (top 5) -->
+      <div class="p-mini-rank" id="p-mini-rank">
+        <div class="p-mini-rank-title">🏆 Classement</div>
+        <div id="p-mini-rank-list"></div>
+      </div>
     </div>
 
     <div class="player-result" id="p-result"></div>
@@ -1890,11 +1972,21 @@ function applyModeUI(mode) {
     ? '🎯 <b>QCM</b> : 4 réponses, timer automatique. Score : 50 + temps_restant × 10 par bonne réponse.'
     : '🔔 <b>Buzzer</b> : le 1er à buzzer répond à l\'oral. Tu valides et passes à la suivante.';
   $('opt-qcm-only').style.display = mode === 'qcm' ? '' : 'none';
-  // Le toggle Hôte est toujours libre (Buzzer ET QCM)
+
   const hostTog = $('opt-host-mode');
-  hostTog.classList.remove('disabled');
-  $('host-mode-desc').textContent = 'Cet écran sert d\'affichage public uniquement. Tu ne joues pas, tu animes.';
-  updateHostModeNote();
+  if (mode === 'buzzer') {
+    // En Buzzer, le mode hôte d'affichage est OBLIGATOIRE
+    hostTog.classList.add('on');
+    hostTog.classList.add('disabled');
+    $('host-mode-desc').textContent = 'Obligatoire en mode Buzzer : cet écran sert d\'affichage et tu pilotes depuis ton téléphone.';
+    $('host-mode-note').style.display = 'none';
+  } else {
+    // En QCM, libre choix
+    hostTog.classList.remove('disabled');
+    $('host-mode-desc').textContent = 'Cet écran sert d\'affichage public uniquement. Tu ne joues pas, tu animes.';
+    $('host-mode-note').style.display = '';
+    updateHostModeNote();
+  }
 }
 
 function updateHostModeNote() {
@@ -2226,6 +2318,7 @@ async function closeRoom() {
 function leaveAll() {
   stopQcmLoop();
   stopReactionsCleanup();
+  if (playerCountdownTimer) { clearInterval(playerCountdownTimer); playerCountdownTimer = null; }
   seenReactions.clear();
   reactionsFirstScan = true;
   prevLeader = null; prevPhase = null; prevStatus = null; prevFirstBuzzer = null;
@@ -3225,13 +3318,26 @@ function renderPlayerQcm(data) {
   const myAnswer = data.answers?.[State.uid];
   $('p-qcm-question').textContent = round.question || 'En attente…';
 
+  // Numéro de question
+  const total = data.nbQuestions || 10;
+  const played = round.number || 0;
+  $('p-qcm-qnum').textContent = `Question ${played} / ${total}`;
+
+  // Mise à jour du timer côté joueur (calculé à partir de openedAt local)
+  updatePlayerCountdown(data);
+
   const buttons = grid.querySelectorAll('.qcm-btn');
   if (Array.isArray(round.choices) && round.choices.length === 4) {
     round.choices.forEach((c, i) => {
       const btn = buttons[i];
       btn.querySelector('.qcm-text').textContent = c;
-      btn.classList.remove('chosen', 'not-chosen');
-      if (myAnswer) {
+      btn.classList.remove('chosen', 'not-chosen', 'correct', 'wrong');
+      if (round.status === 'revealed') {
+        // Révélation : montrer la bonne et les mauvaises
+        btn.disabled = true;
+        if (i === round.correct) btn.classList.add('correct');
+        else btn.classList.add('wrong');
+      } else if (myAnswer) {
         btn.disabled = true;
         if (i === myAnswer.choice) btn.classList.add('chosen');
         else btn.classList.add('not-chosen');
@@ -3240,6 +3346,103 @@ function renderPlayerQcm(data) {
       }
     });
   }
+
+  // Mini-classement (top 5 + ma position si pas dans le top)
+  renderPlayerMiniRank(data);
+}
+
+// Timer joueur QCM
+let playerCountdownTimer = null;
+function updatePlayerCountdown(data) {
+  const round = data.round;
+  if (data.mode !== 'qcm' || round.status !== 'armed' || !round.openedAt) {
+    // Arrête le timer
+    if (playerCountdownTimer) { clearInterval(playerCountdownTimer); playerCountdownTimer = null; }
+    const tEl = $('p-qcm-timer');
+    if (round.status === 'revealed') {
+      tEl.classList.remove('warn', 'danger');
+      $('p-cd-num').textContent = '✓';
+    } else if (round.status !== 'armed') {
+      tEl.classList.remove('warn', 'danger');
+      $('p-cd-num').textContent = '—';
+    }
+    return;
+  }
+
+  const total = data.timer || 30;
+  const tEl = $('p-qcm-timer');
+  const numEl = $('p-cd-num');
+  const fillEl = $('p-timer-fill');
+
+  const tick = () => {
+    const elapsed = (serverNow() - round.openedAt) / 1000;
+    const remaining = Math.max(0, total - elapsed);
+    numEl.textContent = Math.ceil(remaining);
+    const pct = Math.max(0, Math.min(100, (remaining / total) * 100));
+    fillEl.style.width = pct + '%';
+    tEl.classList.remove('warn', 'danger');
+    if (remaining <= 5) tEl.classList.add('danger');
+    else if (remaining <= 10) tEl.classList.add('warn');
+    if (remaining <= 0 && playerCountdownTimer) {
+      clearInterval(playerCountdownTimer);
+      playerCountdownTimer = null;
+    }
+  };
+
+  if (playerCountdownTimer) clearInterval(playerCountdownTimer);
+  tick();   // appel immédiat
+  playerCountdownTimer = setInterval(tick, 200);
+}
+
+// Mini-classement (top 5)
+function renderPlayerMiniRank(data) {
+  const wrap = $('p-mini-rank-list');
+  const players = Object.entries(data.players || {})
+    .map(([id, p]) => ({ id, ...p }))
+    .sort((a, b) => (b.score || 0) - (a.score || 0));
+
+  if (!players.length) {
+    wrap.innerHTML = '<p class="muted" style="font-size:12px;">…</p>';
+    return;
+  }
+
+  // Mode équipes
+  if (data.teamsEnabled && data.teams) {
+    const teams = computeTeamScores(data);
+    wrap.innerHTML = teams.slice(0, 5).map((t, i) => `
+      <div class="p-mini-rank-row rank-${i + 1} team-color-${t.colorIdx}">
+        <span class="mr-rank">${i + 1}</span>
+        <span class="mr-emoji" style="width:14px; height:14px; border-radius:50%; background:var(--team-c);"></span>
+        <span class="mr-name">${escapeHtml(t.name)}</span>
+        <span class="mr-pts">${t.score}</span>
+      </div>`).join('');
+    return;
+  }
+
+  // Mode normal : top 5 joueurs, surlignage si c'est moi
+  const top5 = players.slice(0, 5);
+  let html = top5.map((p, i) => `
+    <div class="p-mini-rank-row rank-${i + 1} ${p.id === State.uid ? 'is-me' : ''}">
+      <span class="mr-rank">${i + 1}</span>
+      <span class="mr-emoji">${p.emoji || '⚡'}</span>
+      <span class="mr-name">${escapeHtml(p.name || 'Joueur')}</span>
+      <span class="mr-pts">${p.score || 0}</span>
+    </div>`).join('');
+
+  // Si je ne suis pas dans le top 5, ajouter ma ligne
+  const myRank = players.findIndex(p => p.id === State.uid);
+  if (myRank >= 5) {
+    const me = players[myRank];
+    html += `<div style="border-top:1px dashed var(--line); margin: 6px 0 0; padding-top:5px;">
+      <div class="p-mini-rank-row is-me">
+        <span class="mr-rank">${myRank + 1}</span>
+        <span class="mr-emoji">${me.emoji || '⚡'}</span>
+        <span class="mr-name">${escapeHtml(me.name || 'Joueur')}</span>
+        <span class="mr-pts">${me.score || 0}</span>
+      </div>
+    </div>`;
+  }
+  wrap.innerHTML = html;
 }
 
 function renderPlayerResult(data) {
