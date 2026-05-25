@@ -269,6 +269,7 @@ input.code-input {
 }
 .toggle-switch.on { background: var(--accent); }
 .toggle-switch.on::after { left: 25px; }
+.toggle-switch.disabled { opacity: .6; cursor: not-allowed; }
 
 /* ============================================================
    ÉQUIPES — couleurs et composants
@@ -858,6 +859,74 @@ input.code-input {
   100% { transform: translate(-50%, 0) scale(1); opacity: 1; }
 }
 
+/* ============================================================
+   ÉDITEUR DE PLAYLIST
+   ============================================================ */
+.ple-q-card {
+  background: var(--bg-soft); border: 1px solid var(--line);
+  border-radius: 14px; padding: 14px; margin-top: 10px;
+}
+.ple-q-card .ple-q-head {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px;
+}
+.ple-q-card .ple-q-num {
+  font-family: 'Fraunces'; font-weight: 900; font-size: 16px;
+  color: var(--accent-2);
+}
+.ple-q-card .ple-q-actions { display: flex; gap: 6px; }
+.ple-q-card .ple-q-actions button {
+  background: var(--panel-2); border: none; color: var(--ink);
+  width: 30px; height: 30px; border-radius: 50%;
+  cursor: pointer; font-size: 13px;
+}
+.ple-q-card .ple-q-actions button:hover { background: var(--accent); }
+.ple-q-card .ple-q-actions button.ple-q-del:hover { background: var(--accent); }
+.ple-q-card input, .ple-q-card textarea {
+  width: 100%; font-family: 'Outfit'; font-size: 14px;
+  color: var(--ink); background: var(--panel-2);
+  border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+  margin-top: 6px;
+}
+.ple-q-card textarea { min-height: 50px; resize: vertical; }
+.ple-q-card .ple-q-lbl {
+  font-size: 11px; color: var(--ink-dim);
+  text-transform: uppercase; letter-spacing: 1px; font-weight: 700;
+  margin-top: 10px;
+}
+.ple-q-card .ple-choices {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px;
+}
+.ple-q-card .ple-choice-row {
+  display: flex; align-items: center; gap: 6px;
+}
+.ple-q-card .ple-choice-row .ple-correct-btn {
+  flex: none; width: 36px; height: 36px;
+  border-radius: 50%; border: 2px solid var(--line);
+  background: transparent; cursor: pointer;
+  font-family: 'Fraunces'; font-weight: 900; color: var(--ink-dim);
+  font-size: 14px;
+}
+.ple-q-card .ple-choice-row .ple-correct-btn.is-correct {
+  background: var(--mint); border-color: var(--mint); color: #06281d;
+}
+.ple-q-card .ple-choice-row input {
+  margin: 0; flex: 1;
+}
+
+/* Boutons d'actions sur les playlist-items */
+.pls-item-actions {
+  display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap;
+}
+.pls-item-actions button {
+  background: var(--panel-2); border: none; color: var(--ink);
+  padding: 6px 12px; border-radius: 8px;
+  font-family: 'Outfit'; font-size: 12px; font-weight: 700;
+  cursor: pointer;
+}
+.pls-item-actions button:hover { background: var(--accent); }
+.pls-item-actions button.danger:hover { background: var(--accent); }
+
 /* Modale */
 .modal-backdrop {
   position: fixed; inset: 0; z-index: 150;
@@ -888,43 +957,59 @@ input.code-input {
       <p class="tagline">Quiz interactif pour vos soirées</p>
     </div>
 
-    <p class="section-title" style="margin-top:0;">Animer une partie</p>
     <div class="menu-buttons">
-      <button class="menu-btn" id="menu-buzzer">
-        <div class="emoji">🔔</div>
+      <button class="menu-btn" id="menu-create">
+        <div class="emoji">🎮</div>
         <div>
-          <h3>Mode Buzzer</h3>
-          <p>Question affichée, le 1er à buzzer répond.</p>
-        </div>
-      </button>
-      <button class="menu-btn" id="menu-qcm">
-        <div class="emoji">🎯</div>
-        <div>
-          <h3>Mode QCM</h3>
-          <p>4 choix, automatique avec timer et score.</p>
-        </div>
-      </button>
-    </div>
-
-    <p class="section-title">Rejoindre</p>
-    <div class="menu-buttons">
-      <button class="menu-btn" id="menu-control">
-        <div class="emoji">📱</div>
-        <div>
-          <h3>Contrôle distant (animateur)</h3>
-          <p>Pilote la partie depuis ton téléphone.</p>
+          <h3>Créer une partie</h3>
+          <p>Mode Buzzer ou QCM, configure et lance.</p>
         </div>
       </button>
       <button class="menu-btn" id="menu-join">
         <div class="emoji">⚡</div>
         <div>
-          <h3>Rejoindre comme joueur</h3>
-          <p>Tape le code, choisis ton pseudo et ton emoji.</p>
+          <h3>Rejoindre une partie</h3>
+          <p>Joueur ou contrôle distant.</p>
+        </div>
+      </button>
+      <button class="menu-btn" id="menu-playlists">
+        <div class="emoji">📚</div>
+        <div>
+          <h3>Mes playlists</h3>
+          <p>Créer, modifier, supprimer tes playlists de questions.</p>
         </div>
       </button>
     </div>
 
     <p class="menu-foot" id="menu-status">Connexion au service…</p>
+  </div>
+</section>
+
+<!-- ===================== SOUS-MENU "REJOINDRE" ===================== -->
+<section id="screen-join-choice" class="screen">
+  <div class="wrap">
+    <div class="topbar">
+      <div class="logo">Buzz<span class="spark">Quiz</span></div>
+      <button class="link-btn" data-home>← Retour</button>
+    </div>
+    <h2 style="font-size:24px; padding: 0 4px;">Rejoindre une partie</h2>
+    <p class="muted" style="padding: 6px 4px 14px;">Tu es joueur, ou animateur avec un PIN ?</p>
+    <div class="menu-buttons">
+      <button class="menu-btn" id="join-as-player">
+        <div class="emoji">⚡</div>
+        <div>
+          <h3>Comme joueur</h3>
+          <p>Tape le code et participe au quiz.</p>
+        </div>
+      </button>
+      <button class="menu-btn" id="join-as-control">
+        <div class="emoji">📱</div>
+        <div>
+          <h3>Comme animateur (contrôle distant)</h3>
+          <p>Tape le code + PIN pour piloter la partie.</p>
+        </div>
+      </button>
+    </div>
   </div>
 </section>
 
@@ -936,8 +1021,31 @@ input.code-input {
       <button class="link-btn" data-home>← Retour</button>
     </div>
     <div class="card">
-      <h2 style="font-size:24px;" id="create-title">Créer une partie</h2>
-      <p class="muted" style="margin-top:6px;" id="create-subtitle">Configure ta partie.</p>
+      <h2 style="font-size:24px;">Créer une partie</h2>
+      <p class="muted" style="margin-top:6px;">Configure ta partie puis lance.</p>
+
+      <label>Mode de jeu</label>
+      <div class="option-group" id="opt-mode">
+        <button class="option-btn active" data-val="buzzer">🔔 Buzzer</button>
+        <button class="option-btn" data-val="qcm">🎯 QCM</button>
+      </div>
+      <p class="muted" id="mode-hint" style="font-size:12px; margin-top:6px;">
+        🔔 <b>Buzzer</b> : 1er à buzzer répond à l'oral. Tu pilotes depuis ton téléphone.
+      </p>
+
+      <!-- Toggle "Mode hôte affichage" -->
+      <div class="toggle-row" style="margin-top:14px;">
+        <div>
+          <div class="toggle-label">📺 Mode hôte (écran d'affichage)</div>
+          <div class="toggle-desc" id="host-mode-desc">
+            Cet écran sert d'affichage public. Les joueurs rejoignent par QR code.
+          </div>
+        </div>
+        <div class="toggle-switch on" id="opt-host-mode"></div>
+      </div>
+      <p class="muted" id="host-mode-note" style="font-size:12px; margin-top:6px; display:none;">
+        ℹ Tu joueras toi-même sur cet écran, avec les autres joueurs.
+      </p>
 
       <label>Nombre de questions</label>
       <div class="option-group" id="opt-nb-questions">
@@ -1306,6 +1414,71 @@ input.code-input {
   </div>
 </section>
 
+<!-- ===================== PLAYLISTS (liste) ===================== -->
+<section id="screen-playlists" class="screen">
+  <div class="wrap">
+    <div class="topbar">
+      <div class="logo">Buzz<span class="spark">Quiz</span></div>
+      <button class="link-btn" data-home>← Retour</button>
+    </div>
+    <div class="card">
+      <h2 style="font-size:24px;">📚 Mes playlists</h2>
+      <p class="muted" style="margin-top:6px;">Crée, modifie ou supprime tes playlists. Stockées sur cet appareil.</p>
+
+      <div class="btn-row" style="margin-top:14px;">
+        <button class="btn primary" id="pls-new">➕ Créer une playlist</button>
+        <button class="btn ghost" id="pls-import">📂 Importer un .json</button>
+      </div>
+      <input type="file" id="pls-import-file" accept=".json,application/json" style="display:none;" />
+
+      <div class="section-title">Tes playlists</div>
+      <div id="pls-local-list">
+        <p class="muted">Chargement…</p>
+      </div>
+
+      <div class="section-title">Playlists d'exemple (non modifiables)</div>
+      <div id="pls-server-list">
+        <p class="muted">Chargement…</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== ÉDITEUR DE PLAYLIST ===================== -->
+<section id="screen-playlist-edit" class="screen">
+  <div class="wrap">
+    <div class="topbar">
+      <div class="logo">Buzz<span class="spark">Quiz</span></div>
+      <button class="link-btn" id="ple-back">← Retour</button>
+    </div>
+    <div class="card">
+      <h2 style="font-size:22px;" id="ple-title">Nouvelle playlist</h2>
+
+      <label>Nom</label>
+      <input type="text" id="ple-name" maxlength="60" placeholder="Ex : Cinéma 2000s" />
+
+      <label>Description (optionnel)</label>
+      <input type="text" id="ple-description" maxlength="120" placeholder="Ex : Questions sur les films des années 2000" />
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:18px; gap:8px; flex-wrap:wrap;">
+        <div class="section-title" style="margin:0;">Questions (<span id="ple-q-count">0</span>)</div>
+        <button class="btn primary" id="ple-add-q" style="width:auto; padding:8px 14px;">➕ Ajouter une question</button>
+      </div>
+
+      <div id="ple-questions"></div>
+
+      <div style="height:18px;"></div>
+      <div class="btn-row">
+        <button class="btn ghost" id="ple-export">📥 Exporter en .json</button>
+        <button class="btn primary" id="ple-save">💾 Enregistrer</button>
+      </div>
+      <div style="margin-top:8px; text-align:center;">
+        <button class="link-btn" id="ple-delete" style="color:var(--accent);">🗑 Supprimer cette playlist</button>
+      </div>
+    </div>
+  </div>
+</section>
+
 </div><!-- /.app -->
 
 <div class="toast" id="toast"></div>
@@ -1322,14 +1495,13 @@ input.code-input {
 //  CONFIG FIREBASE — REMPLIR ICI
 // ============================================================
 const firebaseConfig = {
-  apiKey: "AIzaSyBChD21JJPw_ZRM650G5nqdp408SO8itaQ",
-  authDomain: "buzzquizz-a407f.firebaseapp.com",
-  databaseURL: "https://buzzquizz-a407f-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "buzzquizz-a407f",
-  storageBucket: "buzzquizz-a407f.firebasestorage.app",
-  messagingSenderId: "60888755428",
-  appId: "1:60888755428:web:9e53ebc25995dedc2e50f1",
-  measurementId: "G-Z4BMMHRXKL"
+  apiKey: "COLLE_TA_CLE_ICI",
+  authDomain: "ton-projet.firebaseapp.com",
+  databaseURL: "https://ton-projet-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "ton-projet",
+  storageBucket: "ton-projet.appspot.com",
+  messagingSenderId: "000000000000",
+  appId: "1:000000000000:web:xxxxxxxxxxxxxxxx"
 };
 
 import { initializeApp }
@@ -1354,7 +1526,8 @@ const State = {
 
   // Côté projection
   playlist: null,
-  selectedPlaylistFile: null,
+  selectedPlaylistData: null,
+  selfPlay: false,  // mode "QCM sans hôte affichage" : l'animateur joue lui-même
   usedIndexes: new Set(),
   currentQuestionIndex: -1,
   controlPin: null,
@@ -1391,7 +1564,7 @@ const TEAM_COUNT_MAX = 6;
 // ============================================================
 const $ = (id) => document.getElementById(id);
 
-const SCREENS = ['menu', 'create', 'join', 'control-join', 'lobby', 'player-lobby', 'projection', 'control', 'player', 'podium'];
+const SCREENS = ['menu', 'create', 'join-choice', 'join', 'control-join', 'lobby', 'player-lobby', 'projection', 'control', 'player', 'podium', 'playlists', 'playlist-edit'];
 
 function showScreen(name) {
   SCREENS.forEach((s) => $('screen-' + s).classList.toggle('active', s === name));
@@ -1512,25 +1685,90 @@ function analyzePlaylist(data) {
   };
 }
 
+// ============================================================
+//  PLAYLISTS LOCALES (stockées dans localStorage)
+// ============================================================
+const LOCAL_PLAYLISTS_KEY = 'buzzquiz.playlists.v1';
+
+function loadLocalPlaylists() {
+  try {
+    const raw = localStorage.getItem(LOCAL_PLAYLISTS_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  } catch (_) { return []; }
+}
+
+function saveLocalPlaylists(arr) {
+  try {
+    localStorage.setItem(LOCAL_PLAYLISTS_KEY, JSON.stringify(arr));
+    return true;
+  } catch (e) {
+    toast("Impossible d'enregistrer : " + e.message);
+    return false;
+  }
+}
+
+function makeLocalPlaylistId() {
+  return 'local_' + Date.now() + '_' + Math.floor(Math.random() * 9999);
+}
+
+// Renvoie une playlist locale par id (ou null)
+function getLocalPlaylist(id) {
+  return loadLocalPlaylists().find((p) => p.id === id) || null;
+}
+
+// Sauvegarde (création ou mise à jour) d'une playlist locale
+function upsertLocalPlaylist(playlist) {
+  const all = loadLocalPlaylists();
+  const idx = all.findIndex((p) => p.id === playlist.id);
+  if (idx === -1) all.push(playlist);
+  else all[idx] = playlist;
+  return saveLocalPlaylists(all);
+}
+
+function deleteLocalPlaylist(id) {
+  const all = loadLocalPlaylists().filter((p) => p.id !== id);
+  return saveLocalPlaylists(all);
+}
+
+// ============================================================
+//  LISTAGE COMPLET (serveur + local)
+// ============================================================
 async function listPlaylists() {
+  const items = [];
+
+  // 1) Playlists du serveur (non modifiables)
   try {
     const res = await fetch('./playlists/index.json?_=' + Date.now());
-    if (!res.ok) throw new Error('Index introuvable');
-    const data = await res.json();
-    const items = [];
-    for (const file of data.playlists || []) {
-      try {
-        const p = await fetch('./playlists/' + file + '?_=' + Date.now()).then(r => r.json());
-        const info = analyzePlaylist(p);
-        if (!info.ok) continue;
-        items.push({ file, ...info });
-      } catch (_) {}
+    if (res.ok) {
+      const data = await res.json();
+      for (const file of data.playlists || []) {
+        try {
+          const p = await fetch('./playlists/' + file + '?_=' + Date.now()).then(r => r.json());
+          const info = analyzePlaylist(p);
+          if (!info.ok) continue;
+          items.push({
+            source: 'server', file, id: 'server_' + file, raw: p,
+            ...info,
+          });
+        } catch (_) {}
+      }
     }
-    return items;
-  } catch (e) {
-    toast("Erreur lecture playlists : " + e.message);
-    return [];
+  } catch (_) { /* pas de playlists serveur, c'est OK */ }
+
+  // 2) Playlists locales (modifiables)
+  const locals = loadLocalPlaylists();
+  for (const p of locals) {
+    const info = analyzePlaylist(p);
+    if (!info.ok) continue;
+    items.push({
+      source: 'local', id: p.id, raw: p,
+      ...info,
+    });
   }
+
+  return items;
 }
 
 function loadPlaylistForMode(data, mode) {
@@ -1557,15 +1795,25 @@ function loadPlaylistForMode(data, mode) {
 // ============================================================
 //  NAVIGATION ACCUEIL
 // ============================================================
-$('menu-buzzer').addEventListener('click', () => startCreate('buzzer'));
-$('menu-qcm').addEventListener('click', () => startCreate('qcm'));
-$('menu-control').addEventListener('click', () => {
+$('menu-create').addEventListener('click', () => {
   if (!State.ready) return toast('Service pas encore prêt');
-  showScreen('control-join'); $('cj-code').focus();
+  startCreate('buzzer');   // par défaut buzzer
 });
 $('menu-join').addEventListener('click', () => {
   if (!State.ready) return toast('Service pas encore prêt');
+  showScreen('join-choice');
+});
+$('menu-playlists').addEventListener('click', () => {
+  showScreen('playlists');
+  refreshPlaylistsScreen();
+});
+
+// Sous-menu rejoindre
+$('join-as-player').addEventListener('click', () => {
   showScreen('join'); $('join-code').focus();
+});
+$('join-as-control').addEventListener('click', () => {
+  showScreen('control-join'); $('cj-code').focus();
 });
 
 document.querySelectorAll('[data-home]').forEach((b) =>
@@ -1586,13 +1834,9 @@ document.querySelectorAll('[data-close-room]').forEach((b) =>
 function startCreate(mode) {
   if (!State.ready) return toast('Service pas encore prêt');
   State.mode = mode;
-  State.selectedPlaylistFile = null;
+  State.selectedPlaylistData = null;
   $('create-launch').disabled = true;
-  $('create-title').textContent = mode === 'qcm' ? 'Créer une partie QCM' : 'Créer une partie Buzzer';
-  $('create-subtitle').textContent = mode === 'qcm'
-    ? 'Configure les options puis lance.'
-    : 'Choisis ta playlist puis lance.';
-  $('opt-qcm-only').style.display = mode === 'qcm' ? '' : 'none';
+  applyModeUI(mode);
 
   // Reset équipes
   $('opt-teams-toggle').classList.remove('on');
@@ -1602,6 +1846,54 @@ function startCreate(mode) {
   showScreen('create');
   refreshPlaylistList();
 }
+
+// Met à jour l'UI selon le mode (Buzzer ou QCM)
+function applyModeUI(mode) {
+  // Bouton de mode actif
+  document.querySelectorAll('#opt-mode .option-btn').forEach((b) =>
+    b.classList.toggle('active', b.dataset.val === mode));
+  // Hint sous les boutons
+  $('mode-hint').innerHTML = mode === 'qcm'
+    ? '🎯 <b>QCM</b> : 4 réponses, automatique avec timer. Score : 50 + temps_restant × 10 par bonne réponse.'
+    : '🔔 <b>Buzzer</b> : 1er à buzzer répond à l\'oral. Tu pilotes depuis ton téléphone.';
+  // Options QCM uniquement
+  $('opt-qcm-only').style.display = mode === 'qcm' ? '' : 'none';
+  // Toggle Hôte : Buzzer = forcé ON, QCM = libre
+  const hostTog = $('opt-host-mode');
+  if (mode === 'buzzer') {
+    hostTog.classList.add('on');
+    hostTog.classList.add('disabled');
+    $('host-mode-desc').textContent = 'Obligatoire en mode Buzzer : cet écran sert d\'affichage, tu pilotes depuis ton téléphone.';
+    $('host-mode-note').style.display = 'none';
+  } else {
+    hostTog.classList.remove('disabled');
+    $('host-mode-desc').textContent = 'Cet écran sert d\'affichage public. Les joueurs rejoignent par QR code.';
+    updateHostModeNote();
+  }
+}
+
+function updateHostModeNote() {
+  const isOn = $('opt-host-mode').classList.contains('on');
+  $('host-mode-note').style.display = isOn ? 'none' : '';
+}
+
+// Boutons changement de mode dans l'écran Créer
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('#opt-mode .option-btn');
+  if (!btn) return;
+  applyModeUI(btn.dataset.val);
+  State.mode = btn.dataset.val;
+  // Re-filtrer les playlists (compatibilité)
+  refreshPlaylistList();
+});
+
+// Toggle Mode hôte affichage
+$('opt-host-mode').addEventListener('click', () => {
+  const tog = $('opt-host-mode');
+  if (tog.classList.contains('disabled')) return;  // forcé en mode buzzer
+  tog.classList.toggle('on');
+  updateHostModeNote();
+});
 
 // Groupes de boutons d'option (un seul actif par groupe)
 function setupOptionGroup(groupId, onChange) {
@@ -1651,9 +1943,11 @@ async function refreshPlaylistList() {
   list.innerHTML = '<div class="spinner"></div>';
   const items = await listPlaylists();
   if (!items.length) {
-    list.innerHTML = '<p class="muted">Aucune playlist trouvée. Importe un fichier .json ci-dessous.</p>';
+    list.innerHTML = '<p class="muted">Aucune playlist trouvée. Crée-en une dans le menu "Playlists" ou importe un .json ci-dessous.</p>';
     return;
   }
+  // On stocke les items pour pouvoir les retrouver par id au clic
+  State._playlistItemsCache = items;
   list.innerHTML = items.map((it) => {
     const compat = State.mode === 'qcm' ? it.qcmOk : it.buzzerOk;
     const incompat = !compat
@@ -1661,10 +1955,14 @@ async function refreshPlaylistList() {
           ? '<div class="pl-incompat">Pas compatible QCM (manque les 4 choix)</div>'
           : '<div class="pl-incompat">Pas compatible Buzzer (manque la réponse \'a\')</div>')
       : '';
+    const sourceTag = it.source === 'local'
+      ? '<span class="pl-badge" style="background:var(--mint); color:#06281d;">Tes playlists</span>'
+      : '<span class="pl-badge" style="background:var(--ink-dim); color:var(--bg);">Exemple</span>';
     return `<div class="playlist-item ${compat ? '' : 'disabled'}"
-                 data-file="${it.file}" data-ok="${compat ? '1' : '0'}">
+                 data-id="${it.id}" data-ok="${compat ? '1' : '0'}">
       <div class="pl-name">${escapeHtml(it.name)}</div>
       <div class="pl-meta">
+        ${sourceTag}
         <span class="pl-badge">${it.count} questions</span>
         ${it.description ? escapeHtml(it.description) : ''}
       </div>
@@ -1676,22 +1974,22 @@ async function refreshPlaylistList() {
     card.addEventListener('click', () => {
       list.querySelectorAll('.playlist-item').forEach((c) => c.classList.remove('selected'));
       card.classList.add('selected');
-      State.selectedPlaylistFile = card.dataset.file;
-      $('create-launch').disabled = false;
+      const it = (State._playlistItemsCache || []).find((x) => x.id === card.dataset.id);
+      State.selectedPlaylistData = it ? it.raw : null;
+      $('create-launch').disabled = !State.selectedPlaylistData;
     });
   });
 }
 
-// Import fichier
+// Import fichier (devient juste un raccourci pour ajouter à tes playlists locales et la sélectionner)
 $('import-file').addEventListener('change', async (ev) => {
   const file = ev.target.files[0];
   if (!file) return;
   try {
     const text = await file.text();
     const data = JSON.parse(text);
-    loadPlaylistForMode(data, State.mode);
-    State.selectedPlaylistFile = '__imported__';
-    State.importedPlaylistData = data;
+    loadPlaylistForMode(data, State.mode);  // validation
+    State.selectedPlaylistData = data;
     $('create-launch').disabled = false;
     toast('Playlist importée : ' + (data.name || 'Sans nom'));
   } catch (e) {
@@ -1701,17 +1999,11 @@ $('import-file').addEventListener('change', async (ev) => {
 
 // Bouton créer
 $('create-launch').addEventListener('click', async () => {
-  if (!State.selectedPlaylistFile) return toast('Choisis une playlist');
+  if (!State.selectedPlaylistData) return toast('Choisis une playlist');
 
-  // Charge la playlist
+  // Charge la playlist (validation + load en mémoire)
   try {
-    if (State.selectedPlaylistFile === '__imported__') {
-      loadPlaylistForMode(State.importedPlaylistData, State.mode);
-    } else {
-      const res = await fetch('./playlists/' + State.selectedPlaylistFile + '?_=' + Date.now());
-      const data = await res.json();
-      loadPlaylistForMode(data, State.mode);
-    }
+    loadPlaylistForMode(State.selectedPlaylistData, State.mode);
   } catch (e) {
     toast("Erreur playlist : " + e.message);
     return;
@@ -1742,7 +2034,18 @@ $('create-launch').addEventListener('click', async () => {
     State.teamsConfig = { enabled: false, list: [] };
   }
 
-  // Crée la salle
+  // Mode hôte affichage (toggle ON = écran de projection séparé)
+  const hostMode = $('opt-host-mode').classList.contains('on');
+  State.selfPlay = !hostMode && State.mode === 'qcm';
+  // Note : en mode buzzer, le toggle est forcé ON donc selfPlay reste false
+
+  // Si selfPlay : on demande pseudo + emoji avant
+  if (State.selfPlay) {
+    showSelfPlaySetup();
+    return;
+  }
+
+  // Crée la salle (mode hôte affichage classique)
   try {
     await createRoom();
     showScreen('lobby');
@@ -1750,6 +2053,28 @@ $('create-launch').addEventListener('click', async () => {
     toast("Impossible de créer la salle : " + e.message);
   }
 });
+
+// ============================================================
+//  SELF-PLAY (QCM sans hôte affichage)
+// ============================================================
+// L'animateur joue lui-même : on lui demande son pseudo + emoji, on crée la salle,
+// puis on le fait rejoindre comme joueur immédiatement.
+function showSelfPlaySetup() {
+  // On réutilise l'écran join avec une variante : un sous-titre adapté + bouton custom
+  $('join-code').value = '__selfplay__';   // valeur sentinelle (cachée par CSS)
+  $('join-code').style.display = 'none';
+  document.querySelectorAll('label[for="join-code"], label').forEach((lbl) => {
+    if (lbl.textContent.trim() === 'Code de la salle') lbl.style.display = 'none';
+  });
+  // Modifie le titre et le bouton
+  document.querySelector('#screen-join h2').textContent = 'Ta partie QCM';
+  const btn = $('join-btn');
+  btn.textContent = '▶ Lancer la partie';
+  btn.dataset.selfplay = '1';
+  // Pseudo / emoji déjà gérés par l'écran join
+  showScreen('join');
+  $('join-name').focus();
+}
 
 // ============================================================
 //  CRÉATION DE LA SALLE (côté projection)
@@ -1914,10 +2239,16 @@ $('join-btn').addEventListener('click', joinAsPlayer);
 $('join-name').addEventListener('keydown', (e) => { if (e.key === 'Enter') joinAsPlayer(); });
 
 async function joinAsPlayer() {
-  const code = $('join-code').value.trim();
   const name = $('join-name').value.trim();
-  if (code.length !== 4) return toast('Code = 4 lettres');
   if (!name) return toast('Entre ton pseudo');
+
+  // Mode selfPlay : pas de code à entrer, on crée la salle ici
+  if ($('join-btn').dataset.selfplay === '1') {
+    return await launchSelfPlay(name);
+  }
+
+  const code = $('join-code').value.trim();
+  if (code.length !== 4) return toast('Code = 4 lettres');
 
   $('join-btn').disabled = true;
   try {
@@ -1941,7 +2272,6 @@ async function joinAsPlayer() {
     $('pl-code').textContent = code;
     $('pl-emoji').textContent = State.myEmoji;
     $('pl-name').textContent = State.myName;
-    // Reset du bouton "prêt" au cas où on rejoint après avoir quitté
     const rb = $('pl-ready');
     rb.disabled = false;
     rb.classList.add('ready-pulse');
@@ -1953,6 +2283,51 @@ async function joinAsPlayer() {
     toast(e.message);
   } finally {
     $('join-btn').disabled = false;
+  }
+}
+
+// SelfPlay : combo création de salle + auto-rejoindre comme joueur
+async function launchSelfPlay(name) {
+  $('join-btn').disabled = true;
+  $('join-btn').textContent = 'Création…';
+  try {
+    State.myName = name.slice(0, 20);
+    // 1) Créer la salle (en tant que projection)
+    await createRoom();
+
+    // 2) Pour devenir aussi joueur, on doit avoir un autre uid... or on n'a qu'un seul auth.
+    //    Astuce : on enregistre l'hôte comme joueur sous son propre uid.
+    //    Les règles autorisent (uid === auth.uid) sur players/$uid donc OK.
+    const pRef = ref(db, 'rooms/' + State.roomCode + '/players/' + State.uid);
+    await set(pRef, {
+      name: State.myName, emoji: State.myEmoji,
+      score: 0, ready: true, joinedAt: serverTimestamp(),
+      connected: true,
+      isHostPlayer: true,
+    });
+    onDisconnect(child(pRef, 'connected')).set(false);
+
+    // 3) Marquer aussi hostReady : on va lancer direct sans lobby
+    await update(ref(db, 'rooms/' + State.roomCode), { hostReady: true });
+
+    // 4) Le rôle reste "projection" pour piloter la boucle QCM, mais on affiche l'écran joueur.
+    //    Comme on est projection, on rendra dans l'écran projection... non : on veut l'écran joueur.
+    //    Solution : on bascule manuellement l'écran après le lancement.
+    State.selfPlay = true;
+    $('pl-code').textContent = State.roomCode;
+    $('pl-emoji').textContent = State.myEmoji;
+    $('pl-name').textContent = State.myName;
+
+    // 5) Lance la partie immédiatement (countdown puis play)
+    await update(ref(db, 'rooms/' + State.roomCode), { phase: 'countdown' });
+    // L'écran countdown va s'afficher (via handlePhaseTransition), puis on bascule sur player
+  } catch (e) {
+    toast("Erreur : " + e.message);
+  } finally {
+    $('join-btn').disabled = false;
+    $('join-btn').textContent = 'Entrer dans la partie';
+    $('join-btn').dataset.selfplay = '';
+    $('join-code').style.display = '';
   }
 }
 
@@ -2295,7 +2670,7 @@ function updateProjCountdown(remaining, total) {
 //  COTÉ JOUEUR (en jeu)
 // ============================================================
 $('buzzer').addEventListener('click', async () => {
-  if (!State.roomCode || State.role !== 'player') return;
+  if (!State.roomCode || (State.role !== 'player' && !(State.role === 'projection' && State.selfPlay))) return;
   const tapTime = serverNow();
   try {
     await set(ref(db, 'rooms/' + State.roomCode + '/buzzes/' + State.uid), {
@@ -2319,7 +2694,7 @@ function setupQcmPlayerGrid() {
     btn.dataset.idx = i;
     btn.innerHTML = `<span class="qcm-letter">${['A','B','C','D'][i]}</span><span class="qcm-text">…</span>`;
     btn.addEventListener('click', async () => {
-      if (!State.roomCode || State.role !== 'player') return;
+      if (!State.roomCode || (State.role !== 'player' && !(State.role === 'projection' && State.selfPlay))) return;
       const tapTime = serverNow();
       try {
         await set(ref(db, 'rooms/' + State.roomCode + '/answers/' + State.uid), {
@@ -2345,7 +2720,7 @@ setupQcmPlayerGrid();
 $('reactions-bar').addEventListener('click', async (e) => {
   const btn = e.target.closest('.reaction-btn');
   if (!btn) return;
-  if (State.role !== 'player' || !State.roomCode || !State.uid) return;
+  if ((State.role !== 'player' && !(State.role === 'projection' && State.selfPlay)) || !State.roomCode || !State.uid) return;
   // Throttle : pas plus d'une réaction toutes les 500 ms par utilisateur
   const now = Date.now();
   if (State.lastReactionAt && now - State.lastReactionAt < 500) return;
@@ -2532,8 +2907,14 @@ function render() {
 
   // 5) Rendu selon le rôle
   if (State.role === 'projection') {
-    if ($('screen-lobby').classList.contains('active')) renderLobby(data);
-    else renderProjection(data);
+    if (State.selfPlay) {
+      // Mode self-play : on est techniquement projection mais on affiche l'écran joueur
+      if ($('screen-player').classList.contains('active')) renderPlayer(data);
+      // (pas de lobby en self-play, on lance direct)
+    } else {
+      if ($('screen-lobby').classList.contains('active')) renderLobby(data);
+      else renderProjection(data);
+    }
   }
   if (State.role === 'control') renderControl(data);
   if (State.role === 'player') {
@@ -2544,31 +2925,33 @@ function render() {
 
 function handlePhaseTransition(data) {
   const phase = data.phase || 'lobby';
-  // Tous les rôles : si phase=countdown et on n'est pas déjà dessus, démarrer l'anim
   if (phase === 'countdown' && !$('screen-countdown').classList.contains('active')) {
     startCountdownAnimation();
   }
-  // Si phase=playing, basculer chaque rôle sur son écran de jeu
   if (phase === 'playing') {
-    if (State.role === 'projection' && !$('screen-projection').classList.contains('active')) {
-      showScreen('projection');
-    }
-    if (State.role === 'control' && !$('screen-control').classList.contains('active')) {
-      showScreen('control');
-    }
-    if (State.role === 'player' && !$('screen-player').classList.contains('active')) {
-      showScreen('player');
+    // Mode selfPlay : on bascule sur l'écran joueur même si role=projection
+    if (State.selfPlay && State.role === 'projection') {
+      if (!$('screen-player').classList.contains('active')) {
+        showScreen('player');
+      }
+      // ET on lance la boucle QCM en tâche de fond
+      if (State.mode === 'qcm' && !State.qcmLoop.running) {
+        startQcmLoop();
+      }
+    } else {
+      if (State.role === 'projection' && !$('screen-projection').classList.contains('active')) {
+        showScreen('projection');
+      }
+      if (State.role === 'control' && !$('screen-control').classList.contains('active')) {
+        showScreen('control');
+      }
+      if (State.role === 'player' && !$('screen-player').classList.contains('active')) {
+        showScreen('player');
+      }
     }
   }
-  // Si phase=finished, podium pour tous
   if (phase === 'finished' && !$('screen-podium').classList.contains('active')) {
     showPodium(data);
-  }
-  // Si phase=lobby (retour), montrer le lobby (utile pour le contrôleur qui rejoint)
-  if (phase === 'lobby') {
-    if (State.role === 'control' && $('screen-control').classList.contains('active')) {
-      // Le contrôleur attend dans son écran, c'est OK
-    }
   }
 }
 
@@ -3101,6 +3484,357 @@ function renderPlayerLobby(data) {
   } else {
     wrap.style.display = 'none';
   }
+}
+
+// ============================================================
+//  ÉCRAN PLAYLISTS — liste, création, modification, suppression
+// ============================================================
+
+// État de l'éditeur en cours
+const PlaylistEditor = {
+  id: null,           // id de la playlist en cours d'édition (null = nouvelle)
+  isNew: false,
+  questions: [],      // [{q, a, choices:[...], correct}]
+};
+
+async function refreshPlaylistsScreen() {
+  // Liste locale
+  const locals = loadLocalPlaylists();
+  const localList = $('pls-local-list');
+  if (!locals.length) {
+    localList.innerHTML = '<p class="muted">Aucune playlist personnelle. Crée-en une avec le bouton ci-dessus ou importe un .json.</p>';
+  } else {
+    localList.innerHTML = locals.map((p) => {
+      const info = analyzePlaylist(p);
+      const compat = [];
+      if (info.ok) {
+        if (info.buzzerOk) compat.push('Buzzer');
+        if (info.qcmOk) compat.push('QCM');
+      }
+      return `<div class="playlist-item" data-local-id="${p.id}">
+        <div class="pl-name">${escapeHtml(p.name || 'Sans nom')}</div>
+        <div class="pl-meta">
+          <span class="pl-badge">${info.ok ? info.count : 0} questions</span>
+          ${compat.length ? '<span style="color:var(--mint); font-size:12px;">✓ ' + compat.join(' & ') + '</span>' : '<span style="color:var(--accent); font-size:12px;">⚠ Incomplète</span>'}
+          ${p.description ? '<div style="margin-top:4px;">' + escapeHtml(p.description) + '</div>' : ''}
+        </div>
+        <div class="pls-item-actions">
+          <button data-action="edit" data-id="${p.id}">✏ Modifier</button>
+          <button data-action="export" data-id="${p.id}">📥 Exporter</button>
+          <button data-action="duplicate" data-id="${p.id}">📋 Dupliquer</button>
+          <button data-action="delete" data-id="${p.id}" class="danger">🗑 Supprimer</button>
+        </div>
+      </div>`;
+    }).join('');
+    // Handlers d'actions
+    localList.querySelectorAll('button[data-action]').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const action = btn.dataset.action;
+        const id = btn.dataset.id;
+        if (action === 'edit') openPlaylistEditor(id);
+        else if (action === 'delete') deletePlaylistConfirm(id);
+        else if (action === 'export') exportPlaylist(id);
+        else if (action === 'duplicate') duplicatePlaylist(id);
+      });
+    });
+  }
+
+  // Liste serveur (non modifiable)
+  try {
+    const res = await fetch('./playlists/index.json?_=' + Date.now());
+    const data = await res.json();
+    const serverList = $('pls-server-list');
+    const items = [];
+    for (const file of data.playlists || []) {
+      try {
+        const p = await fetch('./playlists/' + file + '?_=' + Date.now()).then(r => r.json());
+        const info = analyzePlaylist(p);
+        if (info.ok) items.push({ p, info, file });
+      } catch (_) {}
+    }
+    if (!items.length) {
+      serverList.innerHTML = '<p class="muted">Aucune playlist d\'exemple.</p>';
+    } else {
+      serverList.innerHTML = items.map(({ p, info, file }) => {
+        const compat = [];
+        if (info.buzzerOk) compat.push('Buzzer');
+        if (info.qcmOk) compat.push('QCM');
+        return `<div class="playlist-item">
+          <div class="pl-name">${escapeHtml(p.name || file)}</div>
+          <div class="pl-meta">
+            <span class="pl-badge">${info.count} questions</span>
+            ${compat.length ? '<span style="color:var(--mint); font-size:12px;">✓ ' + compat.join(' & ') + '</span>' : ''}
+            ${p.description ? '<div style="margin-top:4px;">' + escapeHtml(p.description) + '</div>' : ''}
+          </div>
+          <div class="pls-item-actions">
+            <button data-action="copy-server" data-file="${file}">📋 Copier dans mes playlists</button>
+          </div>
+        </div>`;
+      }).join('');
+      serverList.querySelectorAll('button[data-action="copy-server"]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const file = btn.dataset.file;
+          try {
+            const data = await fetch('./playlists/' + file + '?_=' + Date.now()).then(r => r.json());
+            const newP = {
+              ...data,
+              id: makeLocalPlaylistId(),
+              name: (data.name || 'Playlist') + ' (copie)',
+            };
+            upsertLocalPlaylist(newP);
+            toast('Playlist copiée dans tes playlists');
+            refreshPlaylistsScreen();
+          } catch (e) {
+            toast("Erreur : " + e.message);
+          }
+        });
+      });
+    }
+  } catch (_) {
+    $('pls-server-list').innerHTML = '<p class="muted">Pas de playlists d\'exemple.</p>';
+  }
+}
+
+// Nouvelle playlist
+$('pls-new').addEventListener('click', () => {
+  openPlaylistEditor(null);  // null = nouvelle
+});
+
+// Import
+$('pls-import').addEventListener('click', () => $('pls-import-file').click());
+$('pls-import-file').addEventListener('change', async (ev) => {
+  const file = ev.target.files[0];
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    const info = analyzePlaylist(data);
+    if (!info.ok) throw new Error(info.reason || 'Playlist invalide');
+    const newP = {
+      ...data,
+      id: makeLocalPlaylistId(),
+    };
+    upsertLocalPlaylist(newP);
+    toast('Playlist importée : ' + (data.name || 'Sans nom'));
+    refreshPlaylistsScreen();
+  } catch (e) {
+    toast("Fichier invalide : " + e.message);
+  }
+  ev.target.value = '';
+});
+
+// Ouvrir l'éditeur (id=null → nouvelle ; sinon édite)
+function openPlaylistEditor(id) {
+  if (id) {
+    const p = getLocalPlaylist(id);
+    if (!p) { toast("Playlist introuvable"); return; }
+    PlaylistEditor.id = id;
+    PlaylistEditor.isNew = false;
+    PlaylistEditor.questions = (p.questions || []).map((q) => ({
+      q: q.q || '',
+      a: q.a || '',
+      choices: Array.isArray(q.choices) && q.choices.length === 4
+        ? [...q.choices] : ['', '', '', ''],
+      correct: Number.isInteger(q.correct) ? q.correct : 0,
+    }));
+    $('ple-title').textContent = 'Modifier : ' + (p.name || 'Sans nom');
+    $('ple-name').value = p.name || '';
+    $('ple-description').value = p.description || '';
+    $('ple-delete').style.display = '';
+  } else {
+    PlaylistEditor.id = makeLocalPlaylistId();
+    PlaylistEditor.isNew = true;
+    PlaylistEditor.questions = [];
+    $('ple-title').textContent = 'Nouvelle playlist';
+    $('ple-name').value = '';
+    $('ple-description').value = '';
+    $('ple-delete').style.display = 'none';
+  }
+  renderEditorQuestions();
+  showScreen('playlist-edit');
+}
+
+// Render des questions dans l'éditeur
+function renderEditorQuestions() {
+  const wrap = $('ple-questions');
+  $('ple-q-count').textContent = PlaylistEditor.questions.length;
+  if (!PlaylistEditor.questions.length) {
+    wrap.innerHTML = '<p class="muted" style="margin-top:10px;">Aucune question. Clique "Ajouter une question" pour commencer.</p>';
+    return;
+  }
+  wrap.innerHTML = PlaylistEditor.questions.map((q, idx) => `
+    <div class="ple-q-card" data-idx="${idx}">
+      <div class="ple-q-head">
+        <span class="ple-q-num">Question ${idx + 1}</span>
+        <div class="ple-q-actions">
+          <button class="ple-q-up" title="Monter">↑</button>
+          <button class="ple-q-down" title="Descendre">↓</button>
+          <button class="ple-q-del" title="Supprimer">✕</button>
+        </div>
+      </div>
+      <div class="ple-q-lbl">Question</div>
+      <textarea class="ple-q-text" rows="2" placeholder="Saisis la question ici">${escapeHtml(q.q)}</textarea>
+      <div class="ple-q-lbl">Réponse (pour le mode Buzzer)</div>
+      <input class="ple-q-answer" type="text" placeholder="Réponse libre" value="${escapeHtml(q.a)}" />
+      <div class="ple-q-lbl">4 choix (pour le mode QCM) — clique sur le rond pour marquer la bonne réponse</div>
+      <div class="ple-choices">
+        ${[0,1,2,3].map((i) => `
+          <div class="ple-choice-row">
+            <button class="ple-correct-btn ${q.correct === i ? 'is-correct' : ''}" data-c="${i}">${['A','B','C','D'][i]}</button>
+            <input class="ple-q-choice" data-c="${i}" type="text" placeholder="Choix ${['A','B','C','D'][i]}" value="${escapeHtml(q.choices[i] || '')}" />
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+
+  // Handlers (event delegation serait mieux, mais ici on attache à chaque card)
+  wrap.querySelectorAll('.ple-q-card').forEach((card) => {
+    const idx = parseInt(card.dataset.idx, 10);
+    card.querySelector('.ple-q-text').addEventListener('input', (e) => {
+      PlaylistEditor.questions[idx].q = e.target.value;
+    });
+    card.querySelector('.ple-q-answer').addEventListener('input', (e) => {
+      PlaylistEditor.questions[idx].a = e.target.value;
+    });
+    card.querySelectorAll('.ple-q-choice').forEach((input) => {
+      input.addEventListener('input', (e) => {
+        const ci = parseInt(input.dataset.c, 10);
+        PlaylistEditor.questions[idx].choices[ci] = e.target.value;
+      });
+    });
+    card.querySelectorAll('.ple-correct-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        PlaylistEditor.questions[idx].correct = parseInt(btn.dataset.c, 10);
+        card.querySelectorAll('.ple-correct-btn').forEach((b) => b.classList.remove('is-correct'));
+        btn.classList.add('is-correct');
+      });
+    });
+    card.querySelector('.ple-q-del').addEventListener('click', () => {
+      if (!confirm('Supprimer cette question ?')) return;
+      PlaylistEditor.questions.splice(idx, 1);
+      renderEditorQuestions();
+    });
+    card.querySelector('.ple-q-up').addEventListener('click', () => {
+      if (idx === 0) return;
+      const tmp = PlaylistEditor.questions[idx - 1];
+      PlaylistEditor.questions[idx - 1] = PlaylistEditor.questions[idx];
+      PlaylistEditor.questions[idx] = tmp;
+      renderEditorQuestions();
+    });
+    card.querySelector('.ple-q-down').addEventListener('click', () => {
+      if (idx === PlaylistEditor.questions.length - 1) return;
+      const tmp = PlaylistEditor.questions[idx + 1];
+      PlaylistEditor.questions[idx + 1] = PlaylistEditor.questions[idx];
+      PlaylistEditor.questions[idx] = tmp;
+      renderEditorQuestions();
+    });
+  });
+}
+
+// Ajouter une question
+$('ple-add-q').addEventListener('click', () => {
+  PlaylistEditor.questions.push({
+    q: '', a: '', choices: ['', '', '', ''], correct: 0,
+  });
+  renderEditorQuestions();
+  // Scroll en bas
+  setTimeout(() => {
+    $('ple-questions').lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 50);
+});
+
+// Enregistrer
+$('ple-save').addEventListener('click', () => {
+  const name = $('ple-name').value.trim();
+  if (!name) return toast('Donne un nom à la playlist');
+  if (!PlaylistEditor.questions.length) return toast('Ajoute au moins une question');
+
+  // Nettoyer les questions vides
+  const cleaned = PlaylistEditor.questions
+    .filter((q) => q.q && q.q.trim())
+    .map((q) => ({
+      q: q.q.trim(),
+      a: (q.a || '').trim(),
+      choices: q.choices.map((c) => (c || '').trim()),
+      correct: q.correct,
+    }));
+
+  if (!cleaned.length) return toast('Ajoute au moins une question avec un énoncé');
+
+  const playlist = {
+    id: PlaylistEditor.id,
+    name,
+    description: $('ple-description').value.trim(),
+    questions: cleaned,
+  };
+
+  if (upsertLocalPlaylist(playlist)) {
+    toast('✓ Playlist enregistrée');
+    showScreen('playlists');
+    refreshPlaylistsScreen();
+  }
+});
+
+// Bouton retour de l'éditeur
+$('ple-back').addEventListener('click', () => {
+  if (confirm('Quitter sans enregistrer ?\nLes modifications seront perdues.')) {
+    showScreen('playlists');
+    refreshPlaylistsScreen();
+  }
+});
+
+// Supprimer depuis l'éditeur
+$('ple-delete').addEventListener('click', () => {
+  deletePlaylistConfirm(PlaylistEditor.id, () => {
+    showScreen('playlists');
+    refreshPlaylistsScreen();
+  });
+});
+
+// Suppression avec confirmation
+function deletePlaylistConfirm(id, onDone) {
+  const p = getLocalPlaylist(id);
+  if (!p) return;
+  if (!confirm('Supprimer définitivement "' + (p.name || 'Sans nom') + '" ?')) return;
+  if (deleteLocalPlaylist(id)) {
+    toast('Playlist supprimée');
+    if (onDone) onDone();
+    else refreshPlaylistsScreen();
+  }
+}
+
+// Dupliquer
+function duplicatePlaylist(id) {
+  const p = getLocalPlaylist(id);
+  if (!p) return;
+  const copy = {
+    ...p,
+    id: makeLocalPlaylistId(),
+    name: (p.name || 'Playlist') + ' (copie)',
+  };
+  if (upsertLocalPlaylist(copy)) {
+    toast('Playlist dupliquée');
+    refreshPlaylistsScreen();
+  }
+}
+
+// Exporter en .json
+function exportPlaylist(id) {
+  const p = getLocalPlaylist(id);
+  if (!p) return;
+  const exported = { ...p };
+  delete exported.id;   // pas besoin d'exporter l'id local
+  const blob = new Blob([JSON.stringify(exported, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const safeName = (p.name || 'playlist').replace(/[^a-zA-Z0-9-_]/g, '_').toLowerCase();
+  a.download = safeName + '.json';
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 100);
+  toast('📥 Téléchargé');
 }
 
 </script>
