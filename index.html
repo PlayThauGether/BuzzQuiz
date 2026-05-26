@@ -238,6 +238,42 @@ input.code-input {
   font-size: 11px; color: var(--accent); margin-top: 5px; font-style: italic;
 }
 
+/* Carte de playlist pour le mode soirée (multi-sélection) */
+.soiree-pl-card {
+  background: var(--bg-soft); border: 2px solid var(--line);
+  border-radius: 12px; padding: 12px 14px; cursor: pointer;
+  display: flex; align-items: center; gap: 12px;
+  transition: border-color .15s, background .15s;
+  user-select: none;
+}
+.soiree-pl-card:hover { border-color: var(--ink-dim); }
+.soiree-pl-card.selected {
+  border-color: var(--accent-2);
+  background: rgba(255,209,102,.08);
+}
+.soiree-pl-card.disabled { opacity: .4; cursor: not-allowed; pointer-events: none; }
+.soiree-pl-card .soiree-check {
+  width: 24px; height: 24px; border-radius: 6px; flex: none;
+  border: 2px solid var(--line); background: var(--panel-2);
+  display: grid; place-items: center; font-size: 14px; color: transparent;
+  transition: background .15s, border-color .15s;
+}
+.soiree-pl-card.selected .soiree-check {
+  background: var(--accent-2); border-color: var(--accent-2); color: #3a2b06;
+}
+.soiree-pl-card .soiree-pl-info { flex: 1; }
+.soiree-pl-card .soiree-pl-name {
+  font-family: 'Fraunces'; font-weight: 900; font-size: 16px;
+}
+.soiree-pl-card .soiree-pl-meta {
+  font-size: 12px; color: var(--ink-dim); margin-top: 2px;
+}
+.soiree-pl-card .soiree-pl-alloc {
+  font-family: 'Fraunces'; font-weight: 900;
+  font-size: 15px; color: var(--accent-2);
+  flex: none; min-width: 50px; text-align: right;
+}
+
 .import-zone {
   margin-top: 10px; border: 2px dashed var(--line); border-radius: 12px;
   padding: 12px; text-align: center;
@@ -627,6 +663,51 @@ input.code-input {
   font-size: 17px; color: var(--ink-dim);
   text-align: center; margin: 14px 8px 0;
 }
+
+/* Grand timer buzzer (joueur + projection) */
+.buzzer-timer-wrap {
+  text-align: center; margin: 8px 0 4px;
+}
+.buzzer-timer-num {
+  font-family: 'Fraunces'; font-weight: 900;
+  font-size: clamp(80px, 22vw, 140px); line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--mint);
+  transition: color .3s;
+}
+.buzzer-timer-num.warn  { color: var(--accent-2); }
+.buzzer-timer-num.danger { color: var(--accent); animation: pulse .6s infinite; }
+.buzzer-timer-bar {
+  height: 8px; background: var(--bg-soft); border-radius: 999px;
+  overflow: hidden; margin: 6px 20px 0;
+}
+.buzzer-timer-bar .btb-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--mint), var(--accent-2), var(--accent));
+  transition: width .5s linear;
+}
+
+/* Cooldown buzzer */
+.buzzer-cooldown {
+  text-align: center; margin-top: 6px;
+  font-family: 'Fraunces'; font-weight: 900;
+  font-size: 18px; color: var(--accent);
+}
+
+/* Timer buzzer sur l'écran projection */
+.proj-buzzer-timer {
+  display: none; text-align: center;
+  font-family: 'Fraunces'; font-weight: 900;
+  font-size: clamp(64px, 12vw, 120px); line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--mint); margin: 10px 0 6px;
+}
+.proj-buzzer-timer.warn   { color: var(--accent-2); }
+.proj-buzzer-timer.danger { color: var(--accent); animation: pulse .6s infinite; }
+
+/* Bouton "Mauvaise réponse" sur contrôle + hôte */
+.btn-wrong { background: rgba(255,92,122,.18); color: var(--accent); border: 1px solid var(--accent); }
+.btn-wrong:hover { background: var(--accent); color: #fff; }
 
 .buzzer-zone { flex: 1; display: grid; place-items: center; padding: 16px 0; }
 
@@ -1168,13 +1249,42 @@ input.code-input {
         </div>
       </div>
 
-      <label>Choisir une playlist</label>
-      <div class="playlist-list" id="playlist-list">
-        <div class="spinner"></div>
+      <!-- Toggle Mode Soirée -->
+      <div class="toggle-row" style="margin-top:18px;">
+        <div>
+          <div class="toggle-label">🎉 Mode Soirée</div>
+          <div class="toggle-desc">Mélange plusieurs playlists en une seule partie</div>
+        </div>
+        <div class="toggle-switch" id="opt-soiree-toggle"></div>
       </div>
-      <div class="import-zone">
-        <input type="file" id="import-file" accept=".json,application/json" />
-        <label for="import-file">📂 Importer un fichier .json</label>
+
+      <!-- Sélection normale (une playlist) -->
+      <div id="playlist-normal">
+        <label>Choisir une playlist</label>
+        <select id="playlist-select" style="margin-top:4px;">
+          <option value="">— Chargement… —</option>
+        </select>
+        <div id="playlist-info" style="display:none; margin-top:10px; padding:12px 14px;
+             background:var(--bg-soft); border:1px solid var(--line); border-radius:12px;">
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <span id="pl-info-name" style="font-family:'Fraunces'; font-weight:900; font-size:16px;"></span>
+            <span id="pl-info-count" class="pl-badge" style="background:var(--panel-2); color:var(--ink);"></span>
+            <span id="pl-info-compat" style="font-size:12px;"></span>
+          </div>
+          <div id="pl-info-desc" class="muted" style="font-size:12px; margin-top:4px;"></div>
+          <div id="pl-info-warn" style="font-size:12px; color:var(--accent); margin-top:4px; display:none;"></div>
+        </div>
+      </div>
+
+      <!-- Sélection Mode Soirée (plusieurs playlists) -->
+      <div id="playlist-soiree" style="display:none;">
+        <label>Choisir les playlists à mélanger</label>
+        <p class="muted" style="font-size:12px; margin-top:2px;">Coche au moins 2 playlists. Les questions seront réparties équitablement.</p>
+        <div id="soiree-playlist-list" style="margin-top:8px; display:grid; gap:8px;"></div>
+        <div id="soiree-summary" style="display:none; margin-top:10px; padding:10px 14px;
+             background:var(--bg-soft); border:1px solid var(--accent-2); border-radius:12px;">
+          <span id="soiree-summary-text" style="font-size:13px; color:var(--accent-2); font-weight:700;"></span>
+        </div>
       </div>
 
       <!-- Mode équipes -->
@@ -1337,6 +1447,26 @@ input.code-input {
   </div>
 </section>
 
+<!-- ===================== ATTENTE ENTRE PARTIES ===================== -->
+<section id="screen-intermission" class="screen">
+  <div class="wrap">
+    <div class="topbar">
+      <div class="room-pill">
+        <span class="lbl">Salle</span>
+        <span class="code" id="im-code">----</span>
+      </div>
+      <button class="link-btn" data-leave>Quitter</button>
+    </div>
+    <div class="card" style="text-align:center;">
+      <div style="font-size:56px; margin:18px 0;">⏳</div>
+      <h2 style="font-size:22px;">Prochaine partie en préparation</h2>
+      <p class="muted" style="margin-top:10px;">L'animateur configure la prochaine partie…</p>
+      <div class="spinner"></div>
+      <p class="muted" style="font-size:13px; margin-top:8px;" id="im-players-count"></p>
+    </div>
+  </div>
+</section>
+
 <!-- ===================== COMPTE À REBOURS ===================== -->
 <div id="screen-countdown">
   <div class="countdown-title" id="cd-title">🎯 MODE QCM</div>
@@ -1379,6 +1509,9 @@ input.code-input {
         <div class="proj-question empty" id="proj-question">
           En attente…
         </div>
+
+        <!-- Timer 15s buzzer (visible seulement en mode buzzer) -->
+        <div class="proj-buzzer-timer" id="proj-buzzer-timer">15</div>
 
         <div class="qcm-choices" id="proj-qcm-choices" style="display:none;"></div>
       </div>
@@ -1423,9 +1556,18 @@ input.code-input {
       <div style="margin-top:16px; display:grid; gap:10px;">
         <button class="btn primary btn-xl" id="c-next">▶ Question suivante</button>
         <div class="btn-row">
-          <button class="btn mint" id="c-reveal" disabled>Révéler</button>
-          <button class="btn ghost" id="c-replay" disabled>Rejouer</button>
+          <button class="btn mint" id="c-reveal" disabled>✓ Bonne réponse</button>
+          <button class="btn btn-wrong" id="c-wrong" disabled>✗ Mauvaise réponse</button>
         </div>
+        <div class="btn-row">
+          <button class="btn ghost" id="c-replay" disabled>↺ Rejouer</button>
+        </div>
+      </div>
+
+      <!-- Qui a buzzé -->
+      <div id="c-buzzers" style="display:none; margin-top:14px; padding:12px; background:var(--bg-soft); border:1px solid var(--line); border-radius:12px;">
+        <div style="font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:1px; font-weight:700; margin-bottom:8px;">🔔 Buzzers</div>
+        <div id="c-buzzers-list"></div>
       </div>
 
       <div class="section-title">⚡ Classement</div>
@@ -1455,9 +1597,19 @@ input.code-input {
 
     <!-- Buzzer view -->
     <div id="p-buzzer-view">
-      <p class="player-mode-hint">Regardez l'écran principal pour la question</p>
+      <p class="player-mode-hint" id="p-buzzer-hint">Regardez l'écran principal pour la question</p>
+
+      <!-- Grand timer 15s -->
+      <div class="buzzer-timer-wrap" id="p-buzzer-timer-wrap" style="display:none;">
+        <div class="buzzer-timer-num" id="p-buzzer-timer-num">15</div>
+        <div class="buzzer-timer-bar"><div class="btb-fill" id="p-buzzer-timer-fill" style="width:100%"></div></div>
+      </div>
+
       <div class="buzzer-zone">
         <button class="buzzer waiting" id="buzzer" disabled>…</button>
+      </div>
+      <div class="buzzer-cooldown" id="p-buzzer-cooldown" style="display:none;">
+        ⏳ Réessaye dans <span id="p-cooldown-num">5</span>s
       </div>
     </div>
 
@@ -1496,7 +1648,8 @@ input.code-input {
       </div>
       <div class="btn-row">
         <button class="btn primary" id="p-host-next" style="font-size:14px; padding:10px;">▶ Question suivante</button>
-        <button class="btn mint" id="p-host-reveal" style="font-size:14px; padding:10px;" disabled>✓ Révéler</button>
+        <button class="btn mint" id="p-host-reveal" style="font-size:14px; padding:10px;" disabled>✓ Bonne réponse</button>
+        <button class="btn btn-wrong" id="p-host-wrong" style="font-size:14px; padding:10px;" disabled>✗ Mauvaise</button>
       </div>
     </div>
 
@@ -1532,9 +1685,15 @@ input.code-input {
     </div>
 
     <div style="text-align:center; padding: 20px 0;">
-      <div class="btn-row" style="max-width:400px; margin:0 auto;">
+      <!-- Boutons hôte -->
+      <div id="podium-host-btns" class="btn-row" style="max-width:480px; margin:0 auto; display:none;">
         <button class="btn ghost" id="podium-home">🏠 Menu</button>
-        <button class="btn primary" id="podium-replay">🎮 Nouvelle partie</button>
+        <button class="btn mint" id="podium-restart">🔄 Reconfigurer</button>
+      </div>
+      <!-- Boutons joueur -->
+      <div id="podium-player-btns" class="btn-row" style="max-width:480px; margin:0 auto; display:none;">
+        <button class="btn ghost" id="podium-leave">🚪 Quitter</button>
+        <button class="btn primary" id="podium-stay">⏳ Rester pour la suite</button>
       </div>
     </div>
   </div>
@@ -1692,6 +1851,8 @@ input.code-input {
 
 <div class="toast" id="toast"></div>
 <div class="dyn-msg" id="dyn-msg"></div>
+<!-- Conteneur isolé pour les emojis flottants : overflow:hidden évite la scrollbar -->
+<div id="emoji-float-container" style="position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:150;"></div>
 
 <!-- QRCode lib (CDN) -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
@@ -1737,7 +1898,9 @@ const State = {
   // Côté projection
   playlist: null,
   selectedPlaylistData: null,
+  soireeSelectedIds: new Set(), // ids des playlists sélectionnées en mode soirée
   hostMode: true,   // true = écran d'affichage public ; false = l'hôte joue aussi
+  isRestartMode: false,
   usedIndexes: new Set(),
   currentQuestionIndex: -1,
   controlPin: null,
@@ -1777,7 +1940,7 @@ const TEAM_COUNT_MAX = 6;
 // ============================================================
 const $ = (id) => document.getElementById(id);
 
-const SCREENS = ['menu', 'create', 'join-choice', 'join', 'control-join', 'lobby', 'player-lobby', 'projection', 'control', 'player', 'podium', 'playlists', 'playlist-edit', 'setup', 'login', 'account'];
+const SCREENS = ['menu', 'create', 'join-choice', 'join', 'control-join', 'lobby', 'player-lobby', 'intermission', 'projection', 'control', 'player', 'podium', 'playlists', 'playlist-edit', 'setup', 'login', 'account'];
 
 function showScreen(name) {
   SCREENS.forEach((s) => $('screen-' + s).classList.toggle('active', s === name));
@@ -2002,7 +2165,7 @@ function spawnStars() {
     const s = document.createElement('div');
     s.className = 'star';
     s.textContent = emojis[i % emojis.length];
-    s.style.left = (Math.random() * 100) + 'vw';
+    s.style.left = (Math.random() * 95) + 'vw';
     s.style.animationDelay = (Math.random() * 6) + 's';
     s.style.animationDuration = (4 + Math.random() * 4) + 's';
     wrap.appendChild(s);
@@ -2226,6 +2389,7 @@ function startCreate(mode) {
   if (!State.ready) return toast('Service pas encore prêt');
   State.mode = mode;
   State.selectedPlaylistData = null;
+  State.soireeSelectedIds = new Set();
   $('create-launch').disabled = true;
   applyModeUI(mode);
 
@@ -2233,6 +2397,20 @@ function startCreate(mode) {
   $('opt-teams-toggle').classList.remove('on');
   $('teams-config').style.display = 'none';
   renderTeamNameInputs(2);
+
+  // Reset mode soirée
+  $('opt-soiree-toggle').classList.remove('on');
+  $('playlist-normal').style.display = '';
+  $('playlist-soiree').style.display = 'none';
+
+  if (State.isRestartMode) {
+    $('create-launch').textContent = '🔄 Relancer la partie';
+    $('create-name').value = State.hostName || '';
+    document.querySelector('#screen-create h2').textContent = '🔄 Reconfigurer la partie';
+  } else {
+    $('create-launch').textContent = '▶ Créer la partie';
+    document.querySelector('#screen-create h2').textContent = '🎮 Créer une partie';
+  }
 
   showScreen('create');
   refreshPlaylistList();
@@ -2278,8 +2456,12 @@ document.addEventListener('click', (e) => {
   if (!btn) return;
   applyModeUI(btn.dataset.val);
   State.mode = btn.dataset.val;
-  // Re-filtrer les playlists (compatibilité)
-  refreshPlaylistList();
+  State.soireeSelectedIds = new Set();  // reset sélection soirée (compatibilité change)
+  if ($('opt-soiree-toggle').classList.contains('on')) {
+    refreshSoireeList();
+  } else {
+    refreshPlaylistList();
+  }
 });
 
 // Toggle Mode hôte affichage
@@ -2302,7 +2484,12 @@ function setupOptionGroup(groupId, onChange) {
     if (onChange) onChange(btn.dataset.val);
   });
 }
-setupOptionGroup('opt-nb-questions');
+setupOptionGroup('opt-nb-questions', () => {
+  // Si mode soirée actif, recalcule les allocations
+  if ($('opt-soiree-toggle').classList.contains('on') && State.soireeSelectedIds.size > 0) {
+    updateSoireeSummary();
+  }
+});
 setupOptionGroup('opt-timer');
 setupOptionGroup('opt-reveal');
 setupOptionGroup('opt-nb-teams', (val) => renderTeamNameInputs(parseInt(val, 10)));
@@ -2313,6 +2500,143 @@ $('opt-teams-toggle').addEventListener('click', () => {
   tog.classList.toggle('on');
   $('teams-config').style.display = tog.classList.contains('on') ? '' : 'none';
 });
+
+// Toggle Mode Soirée
+$('opt-soiree-toggle').addEventListener('click', () => {
+  const tog = $('opt-soiree-toggle');
+  tog.classList.toggle('on');
+  const isSoiree = tog.classList.contains('on');
+  $('playlist-normal').style.display = isSoiree ? 'none' : '';
+  $('playlist-soiree').style.display = isSoiree ? '' : 'none';
+  State.selectedPlaylistData = null;
+  State.soireeSelectedIds = new Set();
+  $('create-launch').disabled = true;
+  if (isSoiree) refreshSoireeList();
+});
+
+// Calcule la répartition des questions entre playlists
+function computeSoireeAlloc(selectedItems, nbTotal) {
+  const n = selectedItems.length;
+  if (!n) return {};
+  const base = Math.floor(nbTotal / n);
+  const rem = nbTotal - base * n;
+  const alloc = {};
+  selectedItems.forEach((it, i) => {
+    const available = it.count;
+    alloc[it.id] = Math.min(available, base + (i < rem ? 1 : 0));
+  });
+  return alloc;
+}
+
+// Construit la playlist fusionnée à partir des ids sélectionnés
+function buildSoireePlaylist(selectedItems, nbTotal) {
+  const alloc = computeSoireeAlloc(selectedItems, nbTotal);
+  const allQuestions = [];
+  for (const it of selectedItems) {
+    const n = alloc[it.id] || 0;
+    if (!n) continue;
+    // Mélange la playlist source
+    const shuffled = [...it.raw.questions].sort(() => Math.random() - .5);
+    const picked = shuffled.slice(0, n);
+    // Normalise selon le mode
+    if (State.mode === 'buzzer') {
+      allQuestions.push(...picked.map(q => ({ q: q.q.trim(), a: (q.a || '').trim() })));
+    } else {
+      allQuestions.push(...picked.map(q => ({
+        q: q.q.trim(),
+        choices: q.choices.map(c => String(c).trim()),
+        correct: q.correct,
+      })));
+    }
+  }
+  // Mélange final de toutes les questions
+  allQuestions.sort(() => Math.random() - .5);
+  const names = selectedItems.map(it => it.name).join(', ');
+  return {
+    name: '🎉 Soirée — ' + names,
+    mode: State.mode,
+    questions: allQuestions,
+  };
+}
+
+// Rafraîchit la liste de sélection multiple Mode Soirée
+async function refreshSoireeList() {
+  const wrap = $('soiree-playlist-list');
+  wrap.innerHTML = '<div class="spinner"></div>';
+  const items = await listPlaylists();
+  State._playlistItemsCache = items;
+
+  if (!items.length) {
+    wrap.innerHTML = '<p class="muted">Aucune playlist disponible.</p>';
+    return;
+  }
+
+  const nbTotal = getActiveOption('opt-nb-questions', 10) || 10;
+
+  wrap.innerHTML = items.map((it) => {
+    const compat = State.mode === 'qcm' ? it.qcmOk : it.buzzerOk;
+    const sel = State.soireeSelectedIds.has(it.id);
+    return `<div class="soiree-pl-card ${sel ? 'selected' : ''} ${!compat ? 'disabled' : ''}"
+                 data-id="${it.id}" data-compat="${compat ? '1' : '0'}">
+      <div class="soiree-check">✓</div>
+      <div class="soiree-pl-info">
+        <div class="soiree-pl-name">${escapeHtml(it.name)}</div>
+        <div class="soiree-pl-meta">${it.count} questions${it.description ? ' · ' + escapeHtml(it.description) : ''}</div>
+        ${!compat ? '<div style="font-size:11px;color:var(--accent);margin-top:2px;">⚠ Incompatible avec ce mode</div>' : ''}
+      </div>
+      <div class="soiree-pl-alloc" style="display:${sel ? '' : 'none'};" id="soiree-alloc-${it.id}"></div>
+    </div>`;
+  }).join('');
+
+  wrap.querySelectorAll('.soiree-pl-card').forEach(card => {
+    if (card.dataset.compat !== '1') return;
+    card.addEventListener('click', () => {
+      const id = card.dataset.id;
+      if (State.soireeSelectedIds.has(id)) State.soireeSelectedIds.delete(id);
+      else State.soireeSelectedIds.add(id);
+      updateSoireeSummary();
+    });
+  });
+
+  updateSoireeSummary();
+}
+
+// Met à jour les allocations et le résumé soirée
+function updateSoireeSummary() {
+  const items = (State._playlistItemsCache || []);
+  const selected = items.filter(it => State.soireeSelectedIds.has(it.id));
+  const nbTotal = getActiveOption('opt-nb-questions', 10) || 10;
+
+  // Mettre à jour les cartes
+  items.forEach(it => {
+    const card = document.querySelector(`.soiree-pl-card[data-id="${it.id}"]`);
+    if (!card) return;
+    const isSel = State.soireeSelectedIds.has(it.id);
+    card.classList.toggle('selected', isSel);
+    const allocEl = card.querySelector(`#soiree-alloc-${it.id}`);
+    if (allocEl) allocEl.style.display = isSel ? '' : 'none';
+  });
+
+  if (selected.length < 1) {
+    $('soiree-summary').style.display = 'none';
+    $('create-launch').disabled = true;
+    return;
+  }
+
+  const alloc = computeSoireeAlloc(selected, nbTotal);
+  // Mettre à jour les allocations affichées
+  selected.forEach(it => {
+    const allocEl = document.querySelector(`#soiree-alloc-${it.id}`);
+    if (allocEl) allocEl.textContent = alloc[it.id] + ' q.';
+  });
+
+  const totalAlloc = Object.values(alloc).reduce((a, b) => a + b, 0);
+  $('soiree-summary').style.display = '';
+  $('soiree-summary-text').textContent =
+    `🎉 ${selected.length} playlist${selected.length > 1 ? 's' : ''} · ${totalAlloc} questions au total`;
+
+  $('create-launch').disabled = selected.length < 2;
+}
 
 // Génère les inputs de nom d'équipe
 function renderTeamNameInputs(nb) {
@@ -2334,81 +2658,130 @@ function getActiveOption(groupId, fallback) {
 }
 
 async function refreshPlaylistList() {
-  const list = $('playlist-list');
-  list.innerHTML = '<div class="spinner"></div>';
+  const sel = $('playlist-select');
+  sel.innerHTML = '<option value="">⏳ Chargement…</option>';
+  $('playlist-info').style.display = 'none';
+  State.selectedPlaylistData = null;
+  $('create-launch').disabled = true;
+
   const items = await listPlaylists();
+  State._playlistItemsCache = items;
+
   if (!items.length) {
-    list.innerHTML = '<p class="muted">Aucune playlist trouvée. Crée-en une dans le menu "Playlists" ou importe un .json ci-dessous.</p>';
+    sel.innerHTML = '<option value="">— Aucune playlist disponible —</option>';
     return;
   }
-  // On stocke les items pour pouvoir les retrouver par id au clic
-  State._playlistItemsCache = items;
-  list.innerHTML = items.map((it) => {
-    const compat = State.mode === 'qcm' ? it.qcmOk : it.buzzerOk;
-    const incompat = !compat
-      ? (State.mode === 'qcm'
-          ? '<div class="pl-incompat">Pas compatible QCM (manque les 4 choix)</div>'
-          : '<div class="pl-incompat">Pas compatible Buzzer (manque la réponse \'a\')</div>')
-      : '';
-    const sourceTag = it.source === 'local'
-      ? '<span class="pl-badge" style="background:var(--mint); color:#06281d;">Tes playlists</span>'
-      : '<span class="pl-badge" style="background:var(--ink-dim); color:var(--bg);">Exemple</span>';
-    return `<div class="playlist-item ${compat ? '' : 'disabled'}"
-                 data-id="${it.id}" data-ok="${compat ? '1' : '0'}">
-      <div class="pl-name">${escapeHtml(it.name)}</div>
-      <div class="pl-meta">
-        ${sourceTag}
-        <span class="pl-badge">${it.count} questions</span>
-        ${it.description ? escapeHtml(it.description) : ''}
-      </div>
-      ${incompat}
-    </div>`;
-  }).join('');
-  list.querySelectorAll('.playlist-item').forEach((card) => {
-    if (card.dataset.ok !== '1') return;
-    card.addEventListener('click', () => {
-      list.querySelectorAll('.playlist-item').forEach((c) => c.classList.remove('selected'));
-      card.classList.add('selected');
-      const it = (State._playlistItemsCache || []).find((x) => x.id === card.dataset.id);
-      State.selectedPlaylistData = it ? it.raw : null;
-      $('create-launch').disabled = !State.selectedPlaylistData;
+
+  // Séparer compatibles et incompatibles
+  const compat = items.filter((it) => State.mode === 'qcm' ? it.qcmOk : it.buzzerOk);
+  const incompat = items.filter((it) => !(State.mode === 'qcm' ? it.qcmOk : it.buzzerOk));
+
+  sel.innerHTML = '<option value="">— Choisir une playlist —</option>';
+
+  if (compat.length) {
+    const grp = document.createElement('optgroup');
+    grp.label = '✅ Compatible ' + (State.mode === 'qcm' ? 'QCM' : 'Buzzer');
+    compat.forEach((it) => {
+      const opt = document.createElement('option');
+      opt.value = it.id;
+      opt.textContent = it.name + ' (' + it.count + ' questions)';
+      grp.appendChild(opt);
     });
-  });
+    sel.appendChild(grp);
+  }
+
+  if (incompat.length) {
+    const grp = document.createElement('optgroup');
+    grp.label = '⚠ Incompatible avec ce mode';
+    incompat.forEach((it) => {
+      const opt = document.createElement('option');
+      opt.value = it.id;
+      opt.disabled = true;
+      opt.textContent = it.name + ' — incompatible';
+      grp.appendChild(opt);
+    });
+    sel.appendChild(grp);
+  }
 }
 
-// Import fichier (devient juste un raccourci pour ajouter à tes playlists locales et la sélectionner)
-$('import-file').addEventListener('change', async (ev) => {
-  const file = ev.target.files[0];
-  if (!file) return;
-  try {
-    const text = await file.text();
-    const data = JSON.parse(text);
-    loadPlaylistForMode(data, State.mode);  // validation
-    State.selectedPlaylistData = data;
-    $('create-launch').disabled = false;
-    toast('Playlist importée : ' + (data.name || 'Sans nom'));
-  } catch (e) {
-    toast("Fichier invalide : " + e.message);
+// Quand on change la sélection dans le dropdown
+$('playlist-select').addEventListener('change', () => {
+  const sel = $('playlist-select');
+  const id = sel.value;
+  const infoBox = $('playlist-info');
+
+  if (!id) {
+    infoBox.style.display = 'none';
+    State.selectedPlaylistData = null;
+    $('create-launch').disabled = true;
+    return;
   }
+
+  const it = (State._playlistItemsCache || []).find((x) => x.id === id);
+  if (!it) { infoBox.style.display = 'none'; return; }
+
+  // Afficher la carte d'infos
+  infoBox.style.display = '';
+  $('pl-info-name').textContent = it.name;
+  $('pl-info-count').textContent = it.count + ' questions';
+
+  const modes = [];
+  if (it.buzzerOk) modes.push('Buzzer');
+  if (it.qcmOk) modes.push('QCM');
+  $('pl-info-compat').innerHTML = modes.length
+    ? '<span style="color:var(--mint);">✓ ' + modes.join(' & ') + '</span>'
+    : '<span style="color:var(--accent);">⚠ Incomplète</span>';
+
+  $('pl-info-desc').textContent = it.raw.description || '';
+  $('pl-info-desc').style.display = it.raw.description ? '' : 'none';
+
+  // Warning si incompatible avec le mode actuel
+  const compat = State.mode === 'qcm' ? it.qcmOk : it.buzzerOk;
+  $('pl-info-warn').style.display = compat ? 'none' : '';
+  $('pl-info-warn').textContent = State.mode === 'qcm'
+    ? '⚠ Cette playlist n\'a pas les 4 choix requis pour le QCM.'
+    : '⚠ Cette playlist n\'a pas de réponse \'a\' requise pour le Buzzer.';
+
+  State.selectedPlaylistData = it.raw;
+  $('create-launch').disabled = !compat;
 });
 
 // Bouton créer
 $('create-launch').addEventListener('click', async () => {
-  if (!State.selectedPlaylistData) return toast('Choisis une playlist');
+  const isSoiree = $('opt-soiree-toggle').classList.contains('on');
 
-  // Charge la playlist (validation + load en mémoire)
-  try {
-    loadPlaylistForMode(State.selectedPlaylistData, State.mode);
-  } catch (e) {
-    toast("Erreur playlist : " + e.message);
-    return;
+  if (isSoiree) {
+    // Mode Soirée : construire la playlist fusionnée
+    if (State.soireeSelectedIds.size < 2) return toast('Sélectionne au moins 2 playlists');
+    const items = (State._playlistItemsCache || [])
+      .filter(it => State.soireeSelectedIds.has(it.id));
+    const nbTotal = getActiveOption('opt-nb-questions', 10) || 10;
+    try {
+      const merged = buildSoireePlaylist(items, nbTotal);
+      State.playlist = merged;
+      State.usedIndexes = new Set();
+      State.currentQuestionIndex = -1;
+      State.qcmConfig.nbQuestions = merged.questions.length;
+    } catch (e) {
+      toast("Erreur : " + e.message);
+      return;
+    }
+  } else {
+    // Mode normal
+    if (!State.selectedPlaylistData) return toast('Choisis une playlist');
+    try {
+      loadPlaylistForMode(State.selectedPlaylistData, State.mode);
+    } catch (e) {
+      toast("Erreur playlist : " + e.message);
+      return;
+    }
+    const nbQ = getActiveOption('opt-nb-questions', 10);
+    const realNb = nbQ === 0 ? State.playlist.questions.length
+                              : Math.min(nbQ, State.playlist.questions.length);
+    State.qcmConfig.nbQuestions = realNb;
   }
 
-  // Configuration
-  const nbQ = getActiveOption('opt-nb-questions', 10);
-  const realNb = nbQ === 0 ? State.playlist.questions.length
-                            : Math.min(nbQ, State.playlist.questions.length);
-  State.qcmConfig.nbQuestions = realNb;
+  // Configuration commune
   if (State.mode === 'qcm') {
     State.qcmConfig.timerSec = getActiveOption('opt-timer', 30);
     State.qcmConfig.revealSec = getActiveOption('opt-reveal', 5);
@@ -2432,18 +2805,27 @@ $('create-launch').addEventListener('click', async () => {
   // Pseudo + emoji du créateur
   State.hostName = ($('create-name').value || '').trim().slice(0, 20);
   if (!State.hostName) { toast('Entre ton pseudo'); return; }
-  // (State.hostEmoji déjà mis à jour par le picker)
 
   // Mode hôte affichage
   const hostMode = $('opt-host-mode').classList.contains('on');
   State.hostMode = hostMode;
 
-  // Crée la salle. L'hôte est ajouté à la liste players s'il joue aussi.
-  try {
-    await createRoom();
-    showScreen('lobby');
-  } catch (e) {
-    toast("Impossible de créer la salle : " + e.message);
+  if (State.isRestartMode) {
+    // RESTART : on réutilise la salle existante
+    try {
+      await restartRoom();
+      showScreen('lobby');
+    } catch (e) {
+      toast("Impossible de relancer : " + e.message);
+    }
+  } else {
+    // Nouvelle salle
+    try {
+      await createRoom();
+      showScreen('lobby');
+    } catch (e) {
+      toast("Impossible de créer la salle : " + e.message);
+    }
   }
 });
 
@@ -2549,6 +2931,89 @@ async function createRoom() {
   listenRoom(code);
 }
 
+// Relance une partie dans la salle existante (même code, mêmes joueurs)
+async function restartRoom() {
+  if (!State.roomCode) throw new Error('Pas de salle active');
+  const code = State.roomCode;
+
+  // Reset de l'état hôte
+  State.isRestartMode = false;
+  State.usedIndexes = new Set();
+  State.currentQuestionIndex = -1;
+  State.role = State.hostMode ? 'projection' : 'host_player';
+
+  // Mise à jour des paramètres de la salle + reset des joueurs
+  const snap = await get(ref(db, 'rooms/' + code + '/players'));
+  const players = snap.exists() ? snap.val() : {};
+
+  // Remet tous les joueurs à ready:false, score:0
+  const playersReset = {};
+  for (const [uid, p] of Object.entries(players)) {
+    playersReset[uid] = { ...p, ready: false, score: 0, teamId: undefined };
+    // Supprimer teamId si pas de mode équipes
+    if (!State.teamsConfig.enabled) delete playersReset[uid].teamId;
+  }
+
+  // Si !hostMode, on s'assure que l'hôte est dans la liste players
+  if (!State.hostMode) {
+    playersReset[State.uid] = {
+      name: State.hostName, emoji: State.hostEmoji,
+      score: 0, ready: false,
+      joinedAt: serverTimestamp(), connected: true, isHost: true,
+    };
+  } else {
+    // Si maintenant en mode affichage, on retire l'hôte des joueurs
+    delete playersReset[State.uid];
+  }
+
+  await update(ref(db, 'rooms/' + code), {
+    hostMode: State.hostMode,
+    hostName: State.hostName,
+    hostEmoji: State.hostEmoji,
+    playlistName: State.playlist.name,
+    mode: State.mode,
+    nbQuestions: State.qcmConfig.nbQuestions,
+    timer: State.qcmConfig.timerSec,
+    revealDuration: State.qcmConfig.revealSec,
+    teamsEnabled: State.teamsConfig.enabled,
+    teams: State.teamsConfig.enabled
+      ? State.teamsConfig.list.reduce((acc, t) => { acc[t.id] = t; return acc; }, {})
+      : null,
+    phase: 'lobby',
+    hostReady: false,
+    round: { status: 'idle', question: '', choices: null, correct: -1, answer: '', number: 0 },
+    players: playersReset,
+    buzzes: null,
+    answers: null,
+    wrongBuzzes: null,
+  });
+
+  // Reset auto-launch
+  autoLaunchTriggered = false;
+  if (autoLaunchTimer) { clearTimeout(autoLaunchTimer); autoLaunchTimer = null; }
+  const hostBtn = $('lobby-host-ready');
+  hostBtn.disabled = false;
+  hostBtn.classList.add('ready-pulse');
+  hostBtn.textContent = '✅ Je suis prêt à animer';
+
+  // Mise à jour de l'UI lobby
+  $('lobby-code').textContent = code;
+  $('proj-code').textContent = code;
+  $('lobby-pin').textContent = State.controlPin;
+  $('lobby-mode-tag').className = 'status-tag ' + (State.mode === 'qcm' ? 'status-armed' : 'status-locked');
+  $('lobby-mode-tag').innerHTML = '<span class="dot"></span>Mode '
+    + (State.mode === 'qcm' ? 'QCM' : 'Buzzer')
+    + (State.teamsConfig.enabled ? ' · 🚩 équipes' : '');
+  const teamRecap = State.teamsConfig.enabled
+    ? `<br>🚩 ${State.teamsConfig.list.length} équipes : ${State.teamsConfig.list.map(t => t.name).join(', ')}`
+    : '';
+  const recap = State.mode === 'qcm'
+    ? `<b>${escapeHtml(State.playlist.name)}</b><br>${State.qcmConfig.nbQuestions} questions · ${State.qcmConfig.timerSec}s · révélation ${State.qcmConfig.revealSec}s${teamRecap}`
+    : `<b>${escapeHtml(State.playlist.name)}</b><br>${State.qcmConfig.nbQuestions} questions${teamRecap}`;
+  $('lobby-recap').innerHTML = recap;
+  $('lobby-pin-card').style.display = (State.mode === 'buzzer' && State.hostMode) ? '' : 'none';
+}
+
 // ============================================================
 //  ÉCOUTE DE LA SALLE (commune à tous les rôles)
 // ============================================================
@@ -2592,7 +3057,10 @@ async function closeRoom() {
 function leaveAll() {
   stopQcmLoop();
   stopReactionsCleanup();
+  stopBuzzerTimer();
+  stopBuzzerPlayerTimer();
   if (playerCountdownTimer) { clearInterval(playerCountdownTimer); playerCountdownTimer = null; }
+  if (State._cooldownInterval) { clearInterval(State._cooldownInterval); State._cooldownInterval = null; }
   seenReactions.clear();
   reactionsFirstScan = true;
   prevLeader = null; prevPhase = null; prevStatus = null; prevFirstBuzzer = null;
@@ -2605,6 +3073,7 @@ function leaveAll() {
   stopListening();
   State.role = null; State.roomCode = null; State.lastState = null;
   State.playlist = null; State.usedIndexes = new Set(); State.currentQuestionIndex = -1;
+  State.isRestartMode = false;
 }
 
 // ============================================================
@@ -2841,12 +3310,13 @@ async function startPlayingPhase() {
 // ============================================================
 async function nextQuestion() {
   if (!isHostLike() || !State.playlist) return;
+  // Arrêter le timer buzzer
+  stopBuzzerTimer();
 
   const remaining = State.playlist.questions
     .map((_, i) => i)
     .filter((i) => !State.usedIndexes.has(i));
 
-  // Fin si plus de questions OU on a atteint le quota
   if (!remaining.length || State.usedIndexes.size >= State.qcmConfig.nbQuestions) {
     await finishGame();
     return;
@@ -2857,7 +3327,6 @@ async function nextQuestion() {
   State.currentQuestionIndex = idx;
   const q = State.playlist.questions[idx];
 
-  // Set round entier (plus simple à valider par les règles)
   await set(ref(db, 'rooms/' + State.roomCode + '/round'), {
     status: 'armed',
     question: q.q,
@@ -2869,12 +3338,31 @@ async function nextQuestion() {
   });
   await remove(ref(db, 'rooms/' + State.roomCode + '/buzzes')).catch(() => {});
   await remove(ref(db, 'rooms/' + State.roomCode + '/answers')).catch(() => {});
+  await remove(ref(db, 'rooms/' + State.roomCode + '/wrongBuzzes')).catch(() => {});
 
-  // Vue privée pour le contrôleur (mode buzzer)
   const privateView = State.mode === 'qcm'
     ? { answer: q.choices[q.correct], correctIndex: q.correct, question: q.q }
     : { answer: q.a || '', question: q.q };
   await set(ref(db, 'private_views/' + State.roomCode), privateView).catch(() => {});
+}
+
+// Marquer le premier buzzeur comme "mauvaise réponse" → cooldown 5s + il peut rebuzzer
+async function markWrongBuzzer() {
+  if (!isHostLike() || !State.roomCode) return;
+  const data = State.lastState;
+  if (!data || !data.buzzes) return;
+  // Trouver le premier buzzeur qui n'est pas encore marqué wrong
+  const buzzes = Object.entries(data.buzzes)
+    .sort((a, b) => a[1].tapTime - b[1].tapTime);
+  const wrongBuzzes = data.wrongBuzzes || {};
+  const first = buzzes.find(([uid]) => !wrongBuzzes[uid]);
+  if (!first) return;
+  const [uid] = first;
+  // Marquer comme wrong (avec timestamp pour le cooldown de 5s)
+  await set(ref(db, 'rooms/' + State.roomCode + '/wrongBuzzes/' + uid),
+    serverTimestamp()).catch(() => {});
+  // Supprimer son buzz pour libérer le suivant
+  await remove(ref(db, 'rooms/' + State.roomCode + '/buzzes/' + uid)).catch(() => {});
 }
 
 async function revealAnswer() {
@@ -3064,21 +3552,19 @@ setupQcmPlayerGrid();
 $('p-host-next').addEventListener('click', async () => {
   if (State.role !== 'host_player') return;
   $('p-host-next').disabled = true;
-  try {
-    await nextQuestion();
-  } catch (e) {
-    toast("Erreur : " + e.message);
-  } finally {
-    $('p-host-next').disabled = false;
-  }
+  try { await nextQuestion(); }
+  catch (e) { toast("Erreur : " + e.message); }
+  finally { $('p-host-next').disabled = false; }
 });
 $('p-host-reveal').addEventListener('click', async () => {
   if (State.role !== 'host_player') return;
-  try {
-    await revealAnswer();
-  } catch (e) {
-    toast("Erreur : " + e.message);
-  }
+  try { await revealAnswer(); }
+  catch (e) { toast("Erreur : " + e.message); }
+});
+$('p-host-wrong').addEventListener('click', async () => {
+  if (State.role !== 'host_player') return;
+  try { await markWrongBuzzer(); }
+  catch (e) { toast("Erreur : " + e.message); }
 });
 
 // ============================================================
@@ -3129,9 +3615,11 @@ function showFloatingEmoji(emoji) {
   const el = document.createElement('div');
   el.className = 'floating-emoji';
   el.textContent = emoji;
-  el.style.left = (Math.random() * 80 + 10) + 'vw';
+  // Max 75vw pour éviter tout débordement (l'emoji fait ~40px de large)
+  el.style.left = (Math.random() * 65 + 10) + 'vw';
   el.style.animationDuration = (2.5 + Math.random() * 1.5) + 's';
-  document.body.appendChild(el);
+  // On utilise le conteneur isolé au lieu du body
+  $('emoji-float-container').appendChild(el);
   setTimeout(() => el.remove(), 4000);
 }
 
@@ -3234,6 +3722,7 @@ function detectDynEvents(data) {
 $('c-next').addEventListener('click', () => sendControlCmd('next'));
 $('c-reveal').addEventListener('click', () => sendControlCmd('reveal'));
 $('c-replay').addEventListener('click', () => sendControlCmd('replay'));
+$('c-wrong').addEventListener('click', () => sendControlCmd('wrong'));
 
 async function sendControlCmd(name) {
   if (State.role !== 'control' || !State.roomCode) return;
@@ -3248,10 +3737,70 @@ async function handleControlCommand(name, ts) {
   if (!ts || ts <= lastCmdTs) return;
   lastCmdTs = ts;
   try {
-    if (name === 'next') await nextQuestion();
+    if (name === 'next')   await nextQuestion();
     if (name === 'reveal') await revealAnswer();
     if (name === 'replay') await replayCurrentQuestion();
+    if (name === 'wrong')  await markWrongBuzzer();
   } catch (e) { console.error(e); }
+}
+
+// ============================================================
+//  TIMER BUZZER 15 SECONDES
+// ============================================================
+const BUZZER_TIMER_SEC = 15;
+let buzzerTimerInterval = null;
+let buzzerPlayerTimerInterval = null;
+
+function stopBuzzerTimer() {
+  if (buzzerTimerInterval) { clearInterval(buzzerTimerInterval); buzzerTimerInterval = null; }
+}
+
+function stopBuzzerPlayerTimer() {
+  if (buzzerPlayerTimerInterval) { clearInterval(buzzerPlayerTimerInterval); buzzerPlayerTimerInterval = null; }
+}
+
+// Mise à jour du timer côté PROJECTION
+function updateBuzzerProjTimer(openedAt) {
+  const tick = () => {
+    const elapsed = (serverNow() - openedAt) / 1000;
+    const remaining = Math.max(0, BUZZER_TIMER_SEC - elapsed);
+    const el = $('proj-buzzer-timer');
+    if (!el) return;
+    el.textContent = Math.ceil(remaining);
+    el.classList.remove('warn', 'danger');
+    if (remaining <= 5) el.classList.add('danger');
+    else if (remaining <= 8) el.classList.add('warn');
+    // Auto-reveal quand le timer atteint 0
+    if (remaining <= 0 && isHostLike() && State.roomCode) {
+      stopBuzzerTimer();
+      // Révèle la réponse automatiquement
+      revealAnswer().catch((e) => console.error('[buzzerTimer]', e));
+    }
+  };
+  if (buzzerTimerInterval) return; // déjà en cours
+  tick();
+  buzzerTimerInterval = setInterval(tick, 200);
+}
+
+// Mise à jour du timer côté JOUEUR
+function updateBuzzerPlayerTimer(openedAt) {
+  const tick = () => {
+    const elapsed = (serverNow() - openedAt) / 1000;
+    const remaining = Math.max(0, BUZZER_TIMER_SEC - elapsed);
+    const numEl = $('p-buzzer-timer-num');
+    const fillEl = $('p-buzzer-timer-fill');
+    if (!numEl) return;
+    numEl.textContent = Math.ceil(remaining);
+    const pct = Math.max(0, Math.min(100, (remaining / BUZZER_TIMER_SEC) * 100));
+    fillEl.style.width = pct + '%';
+    numEl.classList.remove('warn', 'danger');
+    if (remaining <= 5) numEl.classList.add('danger');
+    else if (remaining <= 8) numEl.classList.add('warn');
+    if (remaining <= 0) stopBuzzerPlayerTimer();
+  };
+  if (buzzerPlayerTimerInterval) return; // déjà en cours
+  tick();
+  buzzerPlayerTimerInterval = setInterval(tick, 200);
 }
 
 // ============================================================
@@ -3298,20 +3847,53 @@ function render() {
 
 function handlePhaseTransition(data) {
   const phase = data.phase || 'lobby';
+
+  // Phase 'restarting' : hôte configure, joueurs attendent
+  if (phase === 'restarting') {
+    // Les joueurs (et le contrôle) passent à l'écran d'attente
+    if (State.role === 'player' || State.role === 'control') {
+      if (!$('screen-intermission').classList.contains('active')) {
+        $('im-code').textContent = State.roomCode;
+        showScreen('intermission');
+      }
+      // Mise à jour du compteur de joueurs connectés
+      const nb = Object.keys(data.players || {}).length;
+      $('im-players-count').textContent = nb + ' joueur' + (nb > 1 ? 's' : '') + ' connecté' + (nb > 1 ? 's' : '');
+    }
+    return;
+  }
+
+  // Phase 'lobby' : tout le monde retourne au lobby d'attente
+  // (important pour le restart : les joueurs de l'intermission reviennent)
+  if (phase === 'lobby') {
+    if (State.role === 'player' && ($('screen-intermission').classList.contains('active')
+        || $('screen-podium').classList.contains('active'))) {
+      // Réinitialise le bouton prêt
+      const rb = $('pl-ready');
+      rb.disabled = false;
+      rb.textContent = '✅ Je suis prêt !';
+      rb.classList.add('ready-pulse');
+      $('pl-code').textContent = State.roomCode;
+      showScreen('player-lobby');
+    }
+    if (State.role === 'control' && $('screen-intermission').classList.contains('active')) {
+      showScreen('control');
+    }
+    if (isHostLike() && $('screen-podium').classList.contains('active')) {
+      showScreen('lobby');
+    }
+    return;
+  }
+
   if (phase === 'countdown' && !$('screen-countdown').classList.contains('active')) {
     startCountdownAnimation();
   }
   if (phase === 'playing') {
-    // L'hôte projection va sur l'écran de projection
     if (State.role === 'projection' && !$('screen-projection').classList.contains('active')) {
       showScreen('projection');
     }
-    // L'hôte-joueur va sur l'écran joueur
-    // La boucle QCM est lancée par startPlayingPhase (via le countdown), pas ici.
     if (State.role === 'host_player') {
-      if (!$('screen-player').classList.contains('active')) {
-        showScreen('player');
-      }
+      if (!$('screen-player').classList.contains('active')) showScreen('player');
     }
     if (State.role === 'control' && !$('screen-control').classList.contains('active')) {
       showScreen('control');
@@ -3416,6 +3998,23 @@ function renderProjection(data) {
   if (round.question) $('proj-question').classList.remove('empty'), $('proj-question').textContent = round.question;
   else $('proj-question').classList.add('empty'), $('proj-question').textContent = 'En attente…';
 
+  // Timer buzzer 15s sur la projection
+  const projTimer = $('proj-buzzer-timer');
+  if (data.mode === 'buzzer' && round.status === 'armed' && round.openedAt) {
+    projTimer.style.display = '';
+    // Si c'est une nouvelle question, on repart de zéro
+    const questionKey = round.number + '_' + round.openedAt;
+    if (State._lastBuzzerQuestion !== questionKey) {
+      State._lastBuzzerQuestion = questionKey;
+      stopBuzzerTimer();  // reset l'intervalle pour la nouvelle question
+    }
+    updateBuzzerProjTimer(round.openedAt);
+  } else {
+    projTimer.style.display = 'none';
+    stopBuzzerTimer();
+    State._lastBuzzerQuestion = null;
+  }
+
   // Choix QCM
   const qcmBox = $('proj-qcm-choices');
   if (data.mode === 'qcm' && round.question && Array.isArray(round.choices)) {
@@ -3480,10 +4079,34 @@ function renderControl(data) {
   }
 
   const hasQ = !!round.question;
+  const hasBuzz = hasQ && !!data.buzzes && Object.keys(data.buzzes).length > 0;
   $('c-reveal').disabled = !hasQ || round.status === 'revealed';
+  $('c-wrong').disabled = !hasBuzz || round.status === 'revealed';
   $('c-replay').disabled = !hasQ;
   $('c-next').textContent = played === 0 ? '▶ Démarrer la 1ère question'
                           : (played >= total ? '↻ Terminer' : '▶ Question suivante');
+
+  // Liste des buzzeurs
+  const buzzersDiv = $('c-buzzers');
+  const buzzersList = $('c-buzzers-list');
+  if (hasBuzz) {
+    buzzersDiv.style.display = '';
+    const sorted = Object.entries(data.buzzes)
+      .sort((a, b) => a[1].tapTime - b[1].tapTime);
+    const wrongBuzzes = data.wrongBuzzes || {};
+    buzzersList.innerHTML = sorted.map(([uid, b], i) => {
+      const p = data.players?.[uid];
+      const isWrong = !!wrongBuzzes[uid];
+      return `<div style="display:flex; align-items:center; gap:8px; padding:4px 0; ${isWrong ? 'opacity:.4;' : ''}">
+        <span style="font-family:Fraunces; font-weight:900; color:var(--accent-2);">${i + 1}</span>
+        <span>${p?.emoji || '⚡'}</span>
+        <span style="font-weight:700;">${escapeHtml(p?.name || b.name || 'Joueur')}</span>
+        ${isWrong ? '<span style="font-size:11px; color:var(--accent);">✗</span>' : ''}
+      </div>`;
+    }).join('');
+  } else {
+    buzzersDiv.style.display = 'none';
+  }
 
   renderScoreboard('c-scores', data);
 }
@@ -3535,6 +4158,7 @@ function renderPlayer(data) {
       }
       const hasQ = !!round.question;
       $('p-host-reveal').disabled = !hasQ || round.status === 'revealed';
+      $('p-host-wrong').disabled = !hasQ || !data.buzzes || !Object.keys(data.buzzes).length || round.status === 'revealed';
       $('p-host-next').textContent = (round.number || 0) === 0
         ? '▶ Démarrer la 1ère question'
         : '▶ Question suivante';
@@ -3561,9 +4185,52 @@ function renderPlayerBuzzer(data) {
   const round = data.round;
   const buzzer = $('buzzer');
   const mine = data.buzzes?.[State.uid];
+  const wrongBuzzes = data.wrongBuzzes || {};
+  const myWrongTs = wrongBuzzes[State.uid];
+  const COOLDOWN_MS = 5000;
+
+  // Timer 15s : visible quand la question est armée
+  const timerWrap = $('p-buzzer-timer-wrap');
+  if (round.status === 'armed' && round.openedAt) {
+    timerWrap.style.display = '';
+    // Nouvelle question → reset
+    const questionKey = round.number + '_' + round.openedAt;
+    if (State._lastBuzzerQuestionPlayer !== questionKey) {
+      State._lastBuzzerQuestionPlayer = questionKey;
+      stopBuzzerPlayerTimer();
+    }
+    updateBuzzerPlayerTimer(round.openedAt);
+  } else {
+    timerWrap.style.display = 'none';
+    stopBuzzerPlayerTimer();
+    State._lastBuzzerQuestionPlayer = null;
+  }
+
+  // Cooldown : le joueur a buzzé mais sa réponse était mauvaise
+  const now = serverNow();
+  if (myWrongTs && (now - myWrongTs) < COOLDOWN_MS) {
+    const remaining = Math.ceil((COOLDOWN_MS - (now - myWrongTs)) / 1000);
+    buzzer.className = 'buzzer waiting'; buzzer.disabled = true;
+    buzzer.textContent = '✗';
+    $('p-buzzer-cooldown').style.display = '';
+    $('p-cooldown-num').textContent = remaining;
+    // Recheck dans 200ms pour mettre à jour le compte à rebours
+    if (!State._cooldownInterval) {
+      State._cooldownInterval = setInterval(() => {
+        if (State.lastState) renderPlayerBuzzer(State.lastState);
+      }, 200);
+    }
+    return;
+  }
+  // Fin du cooldown : nettoyer l'intervalle
+  if (State._cooldownInterval) {
+    clearInterval(State._cooldownInterval);
+    State._cooldownInterval = null;
+  }
+  $('p-buzzer-cooldown').style.display = 'none';
+
   buzzer.className = 'buzzer';
   if (mine) {
-    // Calcule mon rang
     const all = Object.entries(data.buzzes || {}).sort((a,b) => a[1].tapTime - b[1].tapTime);
     const myRank = all.findIndex(([id]) => id === State.uid) + 1;
     buzzer.classList.add('done'); buzzer.disabled = true;
@@ -3573,8 +4240,7 @@ function renderPlayerBuzzer(data) {
     buzzer.textContent = 'BUZZ';
   } else {
     buzzer.classList.add('waiting'); buzzer.disabled = true;
-    buzzer.textContent = round.status === 'locked' ? 'Trop tard'
-                       : round.status === 'revealed' ? '—' : '…';
+    buzzer.textContent = round.status === 'revealed' ? '—' : '…';
   }
 }
 
@@ -3823,6 +4489,11 @@ function showPodium(data) {
 
   spawnConfetti();
   $('podium-subtitle').textContent = data.playlistName || 'Bravo à tous !';
+
+  // Boutons selon le rôle
+  const isHost = isHostLike();
+  $('podium-host-btns').style.display = isHost ? '' : 'none';
+  $('podium-player-btns').style.display = !isHost ? '' : 'none';
 }
 
 function showPodiumPlayers(data) {
@@ -3899,32 +4570,48 @@ function showPodiumTeams(data) {
 
 function spawnConfetti() {
   const emojis = ['🎉','🎊','✨','⭐','💫','🌟'];
+  const container = $('emoji-float-container');
   for (let i = 0; i < 40; i++) {
     const c = document.createElement('div');
     c.className = 'confetti';
     c.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-    c.style.left = (Math.random() * 100) + 'vw';
+    c.style.left = (Math.random() * 96) + 'vw';
     c.style.animationDelay = (Math.random() * 2) + 's';
     c.style.animationDuration = (3 + Math.random() * 2) + 's';
-    document.body.appendChild(c);
+    container.appendChild(c);
     setTimeout(() => c.remove(), 6000);
   }
 }
 
 // Boutons podium
 $('podium-home').addEventListener('click', () => { leaveAll(); showScreen('menu'); });
-$('podium-replay').addEventListener('click', async () => {
-  // Si on était la projection, on relance une nouvelle partie avec la même playlist
-  if (isHostLike() && State.playlist) {
-    await closeRoom();
+
+// HÔTE : reconfigurer → phase 'restarting', les joueurs voient l'écran d'attente
+$('podium-restart').addEventListener('click', async () => {
+  if (!isHostLike() || !State.roomCode) return;
+  try {
+    await update(ref(db, 'rooms/' + State.roomCode), { phase: 'restarting' });
+    // L'hôte va configurer la prochaine partie (screen-create en mode restart)
+    State.isRestartMode = true;
     State.usedIndexes = new Set();
     State.currentQuestionIndex = -1;
-    await createRoom();
-    showScreen('lobby');
-  } else {
-    leaveAll(); showScreen('menu');
-  }
+    startCreate('buzzer');  // réutilise l'écran de création
+  } catch (e) { toast('Erreur : ' + e.message); }
 });
+
+// JOUEUR : rester pour la suite → aller dans l'écran d'attente
+$('podium-stay').addEventListener('click', () => {
+  if (!State.roomCode) return;
+  // Réinitialiser le ready du joueur
+  update(ref(db, 'rooms/' + State.roomCode + '/players/' + State.uid), {
+    ready: false, score: 0,
+  }).catch(() => {});
+  $('im-code').textContent = State.roomCode;
+  showScreen('intermission');
+});
+
+// JOUEUR : quitter depuis le podium
+$('podium-leave').addEventListener('click', () => { leaveAll(); showScreen('menu'); });
 
 // ============================================================
 //  ÉCRAN LOBBY — quand State.lastState change, on déclenche le rendu
