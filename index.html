@@ -93,11 +93,12 @@ h1, h2, h3 { font-family: 'Fraunces', serif; font-weight: 900; line-height: 1.05
 .logo {
   font-family: 'Fraunces', serif; font-weight: 900;
   font-size: 30px; letter-spacing: -.5px;
-  display: flex; align-items: center; gap: 10px;
+  display: inline;
 }
 .logo img {
   width: 52px; height: 52px;
   object-fit: contain; flex: none;
+  filter: invert(1);
 }
 .logo .spark { color: var(--accent); }
 .logo .ptg {
@@ -374,7 +375,7 @@ input.code-input {
 
 /* Inputs pour nommer les équipes côté création */
 .team-name-input-row {
-  display: flex; align-items: center; gap: 10px; margin-top: 6px;
+  display: inline; margin-top: 6px;
 }
 .team-name-input-row .team-color-chip {
   width: 24px; height: 24px; border-radius: 50%;
@@ -509,23 +510,68 @@ input.code-input {
 /* ============================================================
    ÉCRAN JOIN
    ============================================================ */
-.emoji-picker {
-  display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px;
-  max-height: 200px; overflow-y: auto;
-  background: var(--bg-soft); border: 1px solid var(--line);
-  border-radius: 12px; padding: 10px; margin-top: 6px;
+/* Trigger bouton emoji */
+.emoji-dropdown-trigger {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 18px; margin-top: 6px;
+  border: 2px solid var(--accent); border-radius: 14px;
+  background: rgba(255,92,122,.06); cursor: pointer;
+  transition: border-color .2s, background .2s;
+  width: 100%;
 }
-.emoji-pick {
-  background: transparent; border: 2px solid transparent;
-  font-size: 22px; padding: 6px; border-radius: 10px; cursor: pointer;
-  transition: border-color .15s, background .15s;
+.emoji-dropdown-trigger:hover { border-color: var(--accent-2); background: rgba(255,209,102,.08); }
+.emoji-dropdown-trigger .edt-preview { font-size: 32px; }
+.emoji-dropdown-trigger .edt-label {
+  font-family: 'Outfit'; font-weight: 700; font-size: 15px;
+  color: var(--mint); flex: 1;
 }
-.emoji-pick:hover { background: var(--panel-2); }
-.emoji-pick.selected {
-  border-color: var(--accent); background: rgba(255,92,122,.15);
+.emoji-dropdown-trigger .edt-caret { color: var(--ink-dim); font-size: 12px; }
+
+/* Modale emoji */
+.emoji-modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.8); z-index: 10001;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+}
+.emoji-modal-overlay.hidden { display: none; }
+.emoji-modal {
+  background: var(--panel); border: 2px solid var(--accent);
+  border-radius: 20px; padding: 20px;
+  max-width: 440px; width: 100%;
+  max-height: 78vh; overflow-y: auto;
+}
+.emoji-modal-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 14px;
+}
+.emoji-modal-header h3 {
+  font-family: 'Fraunces'; font-weight: 900;
+  font-size: 18px; color: var(--mint);
+}
+.emoji-modal-close {
+  background: rgba(255,92,122,.5); border: none; color: #fff;
+  font-size: 14px; font-weight: 800;
+  width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
+}
+.emoji-modal-close:hover { background: var(--accent); }
+.emoji-modal-grid {
+  display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px;
 }
 @media (max-width: 480px) {
-  .emoji-picker { grid-template-columns: repeat(6, 1fr); }
+  .emoji-modal-grid { grid-template-columns: repeat(7, 1fr); }
+}
+.emoji-pick {
+  background: var(--bg-soft); border: 2px solid transparent;
+  font-size: 24px; padding: 7px; border-radius: 10px; cursor: pointer;
+  transition: border-color .15s, background .15s, transform .1s;
+  display: flex; align-items: center; justify-content: center;
+  aspect-ratio: 1;
+}
+.emoji-pick:hover { background: var(--panel-2); transform: scale(1.15); }
+.emoji-pick.selected {
+  border-color: var(--accent); background: rgba(255,92,122,.2);
+  transform: scale(1.15);
 }
 
 /* ============================================================
@@ -677,7 +723,7 @@ input.code-input {
   margin-bottom: 12px; gap: 10px;
 }
 .player-info {
-  display: flex; align-items: center; gap: 10px;
+  display: inline;
   font-size: 14px; color: var(--ink-dim);
 }
 .player-info .me-emoji { font-size: 24px; }
@@ -838,7 +884,7 @@ input.code-input {
   margin-bottom: 8px;
 }
 .p-mini-rank-row {
-  display: flex; align-items: center; gap: 10px;
+  display: inline;
   padding: 5px 0; font-size: 14px;
 }
 .p-mini-rank-row.is-me {
@@ -962,8 +1008,50 @@ input.code-input {
 .pin-box .pin-tip { font-size: 12px; color: var(--ink-dim); margin-top: 4px; }
 
 /* ============================================================
-   TOAST + LOADING
+   BOUTONS FIXES — Plein écran (haut gauche) + Menu (haut droit)
    ============================================================ */
+.fixed-btn {
+  position: fixed;
+  top: calc(12px + env(safe-area-inset-top, 0px));
+  background: rgba(33,27,69,.75);
+  border: 1px solid var(--line);
+  color: var(--ink); font-family: 'Outfit'; font-weight: 700;
+  font-size: 13px; padding: 8px 12px; border-radius: 10px;
+  cursor: pointer; z-index: 9000;
+  backdrop-filter: blur(8px);
+  transition: background .2s;
+  white-space: nowrap;
+}
+.fixed-btn:hover { background: rgba(44,36,88,.9); }
+#btn-fullscreen { left: 12px; }
+#btn-menu-fab   { right: 12px; }
+
+/* Panneau menu contextuel */
+.fab-panel {
+  position: fixed;
+  top: calc(50px + env(safe-area-inset-top, 0px));
+  right: 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 10px;
+  z-index: 9001;
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 200px;
+  box-shadow: 0 12px 30px rgba(0,0,0,.5);
+}
+.fab-panel.open { display: flex; }
+.fab-item {
+  background: transparent; border: none; color: var(--ink);
+  font-family: 'Outfit'; font-weight: 600; font-size: 14px;
+  padding: 10px 14px; border-radius: 10px; cursor: pointer;
+  text-align: left; display: flex; align-items: center; gap: 10px;
+}
+.fab-item:hover { background: var(--panel-2); }
+.fab-item.danger { color: var(--accent); }
+.fab-separator { height: 1px; background: var(--line); margin: 2px 0; }
 .toast {
   position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%);
   background: var(--accent); color: #fff; font-weight: 700;
@@ -1127,7 +1215,7 @@ input.code-input {
 <section id="screen-menu" class="screen active">
   <div class="wrap">
     <div class="hero">
-      <div class="logo"><img src="./logo-ptg.png" alt="PTG">Buzz<span class="spark">Quiz</span><span class="ptg">par Play Thau'Gether</span></div>
+      <div class="logo">Buzz<span class="spark">Quiz</span><span class="ptg">par Play Thau'Gether</span></div>
       <p class="tagline">Quiz interactif pour vos soirées</p>
     </div>
 
@@ -1185,7 +1273,7 @@ input.code-input {
 <section id="screen-join-choice" class="screen">
   <div class="wrap">
     <div class="topbar">
-      <div class="logo"><img src="./logo-ptg.png" alt="PTG">Buzz<span class="spark">Quiz</span><span class="ptg">par Play Thau'Gether</span></div>
+      <div class="logo">Buzz<span class="spark">Quiz</span><span class="ptg">par Play Thau'Gether</span></div>
       <button class="link-btn" data-home>← Retour</button>
     </div>
     <h2 style="font-size:24px; padding: 0 4px;">Rejoindre une partie</h2>
@@ -1220,7 +1308,7 @@ input.code-input {
 <section id="screen-create" class="screen">
   <div class="wrap">
     <div class="topbar">
-      <div class="logo"><img src="./logo-ptg.png" alt="PTG">Buzz<span class="spark">Quiz</span><span class="ptg">par Play Thau'Gether</span></div>
+      <div class="logo">Buzz<span class="spark">Quiz</span><span class="ptg">par Play Thau'Gether</span></div>
       <button class="link-btn" data-home>← Retour</button>
     </div>
     <div class="card">
@@ -1234,7 +1322,11 @@ input.code-input {
       </div>
       <div id="create-emoji-wrap">
         <label>Ton emoji</label>
-        <div class="emoji-picker" id="create-emoji-picker" style="max-height:140px;"></div>
+        <button class="emoji-dropdown-trigger" id="create-emoji-trigger" type="button">
+          <span class="edt-preview" id="create-emoji-preview">🎬</span>
+          <span class="edt-label">Choisis ton emoji</span>
+          <span class="edt-caret">▼</span>
+        </button>
       </div>
 
       <label>Mode de jeu</label>
@@ -1355,7 +1447,7 @@ input.code-input {
 <section id="screen-join" class="screen">
   <div class="wrap">
     <div class="topbar">
-      <div class="logo"><img src="./logo-ptg.png" alt="PTG">Buzz<span class="spark">Quiz</span><span class="ptg">par Play Thau'Gether</span></div>
+      <div class="logo">Buzz<span class="spark">Quiz</span><span class="ptg">par Play Thau'Gether</span></div>
       <button class="link-btn" data-home>← Retour</button>
     </div>
     <div class="card">
@@ -1365,7 +1457,11 @@ input.code-input {
       <label>Pseudo</label>
       <input id="join-name" maxlength="20" autocomplete="off" placeholder="Ex : Camille" />
       <label>Choisis ton emoji</label>
-      <div class="emoji-picker" id="emoji-picker"></div>
+      <button class="emoji-dropdown-trigger" id="join-emoji-trigger" type="button">
+        <span class="edt-preview" id="join-emoji-preview">⚡</span>
+        <span class="edt-label">Choisis ton emoji</span>
+        <span class="edt-caret">▼</span>
+      </button>
       <div style="height:18px;"></div>
       <button class="btn primary btn-xl" id="join-btn">Entrer dans la partie</button>
     </div>
@@ -1376,7 +1472,7 @@ input.code-input {
 <section id="screen-control-join" class="screen">
   <div class="wrap">
     <div class="topbar">
-      <div class="logo"><img src="./logo-ptg.png" alt="PTG">Buzz<span class="spark">Quiz</span><span class="ptg">par Play Thau'Gether</span></div>
+      <div class="logo">Buzz<span class="spark">Quiz</span><span class="ptg">par Play Thau'Gether</span></div>
       <button class="link-btn" data-home>← Retour</button>
     </div>
     <div class="card">
@@ -1396,7 +1492,7 @@ input.code-input {
 <section id="screen-lobby" class="screen">
   <div class="wrap-wide">
     <div class="topbar">
-      <div class="logo"><img src="./logo-ptg.png" alt="PTG">Buzz<span class="spark">Quiz</span><span class="ptg">par Play Thau'Gether</span></div>
+      <div class="logo">Buzz<span class="spark">Quiz</span><span class="ptg">par Play Thau'Gether</span></div>
       <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
         <span id="lobby-mode-tag" class="status-tag status-idle"><span class="dot"></span>Buzzer</span>
         <button class="link-btn" data-close-room>Fermer la salle</button>
@@ -1510,7 +1606,7 @@ input.code-input {
 <section id="screen-projection" class="screen">
   <div class="wrap-wide">
     <div class="topbar">
-      <div class="logo"><img src="./logo-ptg.png" alt="PTG">Buzz<span class="spark">Quiz</span><span class="ptg">par Play Thau'Gether</span></div>
+      <div class="logo">Buzz<span class="spark">Quiz</span><span class="ptg">par Play Thau'Gether</span></div>
       <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
         <div class="room-pill">
           <span class="lbl">Salle</span>
@@ -1694,10 +1790,6 @@ input.code-input {
       <button class="reaction-btn" data-emoji="😱">😱</button>
       <button class="reaction-btn" data-emoji="🎉">🎉</button>
     </div>
-
-    <div class="player-foot">
-      <button class="link-btn" data-leave>Quitter la partie</button>
-    </div>
   </div>
 </section>
 
@@ -1735,7 +1827,7 @@ input.code-input {
 <section id="screen-playlists" class="screen">
   <div class="wrap">
     <div class="topbar">
-      <div class="logo"><img src="./logo-ptg.png" alt="PTG">Buzz<span class="spark">Quiz</span><span class="ptg">par Play Thau'Gether</span></div>
+      <div class="logo">Buzz<span class="spark">Quiz</span><span class="ptg">par Play Thau'Gether</span></div>
       <button class="link-btn" data-home>← Retour</button>
     </div>
     <div class="card">
@@ -1765,7 +1857,7 @@ input.code-input {
 <section id="screen-playlist-edit" class="screen">
   <div class="wrap">
     <div class="topbar">
-      <div class="logo"><img src="./logo-ptg.png" alt="PTG">Buzz<span class="spark">Quiz</span><span class="ptg">par Play Thau'Gether</span></div>
+      <div class="logo">Buzz<span class="spark">Quiz</span><span class="ptg">par Play Thau'Gether</span></div>
       <button class="link-btn" id="ple-back">← Retour</button>
     </div>
     <div class="card">
@@ -1800,7 +1892,7 @@ input.code-input {
 <section id="screen-setup" class="screen">
   <div class="wrap">
     <div class="topbar">
-      <div class="logo"><img src="./logo-ptg.png" alt="PTG">Buzz<span class="spark">Quiz</span><span class="ptg">par Play Thau'Gether</span></div>
+      <div class="logo">Buzz<span class="spark">Quiz</span><span class="ptg">par Play Thau'Gether</span></div>
     </div>
     <div class="card">
       <h2 style="font-size:24px;">🛠 Première configuration</h2>
@@ -1821,7 +1913,7 @@ input.code-input {
 <section id="screen-login" class="screen">
   <div class="wrap">
     <div class="topbar">
-      <div class="logo"><img src="./logo-ptg.png" alt="PTG">Buzz<span class="spark">Quiz</span><span class="ptg">par Play Thau'Gether</span></div>
+      <div class="logo">Buzz<span class="spark">Quiz</span><span class="ptg">par Play Thau'Gether</span></div>
       <button class="link-btn" data-home>← Retour</button>
     </div>
     <div class="card">
@@ -1841,7 +1933,7 @@ input.code-input {
 <section id="screen-account" class="screen">
   <div class="wrap">
     <div class="topbar">
-      <div class="logo"><img src="./logo-ptg.png" alt="PTG">Buzz<span class="spark">Quiz</span><span class="ptg">par Play Thau'Gether</span></div>
+      <div class="logo">Buzz<span class="spark">Quiz</span><span class="ptg">par Play Thau'Gether</span></div>
       <button class="link-btn" data-home>← Retour</button>
     </div>
     <div class="card">
@@ -1883,6 +1975,36 @@ input.code-input {
 
 <div class="toast" id="toast"></div>
 <div class="dyn-msg" id="dyn-msg"></div>
+
+<!-- Modale sélection emoji (partagée entre create et join) -->
+<div class="emoji-modal-overlay hidden" id="emoji-modal-overlay">
+  <div class="emoji-modal">
+    <div class="emoji-modal-header">
+      <h3 id="emoji-modal-title">😎 Choisis ton emoji</h3>
+      <button class="emoji-modal-close" id="emoji-modal-close">✕</button>
+    </div>
+    <div class="emoji-modal-grid" id="emoji-modal-grid"></div>
+  </div>
+</div>
+
+<!-- Bouton plein écran (haut gauche, toujours visible) -->
+<button class="fixed-btn" id="btn-fullscreen" title="Plein écran">📺</button>
+
+<!-- Bouton menu (haut droit, toujours visible) -->
+<button class="fixed-btn" id="btn-menu-fab" title="Menu">☰</button>
+
+<!-- Panneau menu contextuel -->
+<div class="fab-panel" id="fab-panel">
+  <button class="fab-item" id="fab-home">🏠 Menu principal</button>
+  <div class="fab-separator"></div>
+  <!-- Affiché si admin connecté -->
+  <button class="fab-item" id="fab-playlists" style="display:none;">📚 Gérer les playlists</button>
+  <button class="fab-item" id="fab-account" style="display:none;">⚙️ Mon compte</button>
+  <div class="fab-separator" id="fab-sep-auth" style="display:none;"></div>
+  <!-- Connexion / déconnexion -->
+  <button class="fab-item" id="fab-login" style="display:none;">🔑 Connexion admin</button>
+  <button class="fab-item danger" id="fab-logout" style="display:none;">🚪 Déconnexion</button>
+</div>
 
 <!-- Modale "Prends le contrôle" — visible uniquement sur l'écran de l'hôte, jamais projeté -->
 <div class="modal-backdrop" id="modal-control-setup">
@@ -2067,6 +2189,8 @@ function updateAuthUI() {
     $('account-username').textContent = currentUser.username;
     $('account-admin-section').style.display = isAdmin ? '' : 'none';
   }
+  // Sync fab (la fonction peut ne pas encore exister au premier appel)
+  if (typeof updateFabMenu === 'function') updateFabMenu();
 }
 
 function doLogout() {
@@ -2327,6 +2451,40 @@ function clearRoomCode() {
 }
 
 initFirebase();
+
+// ============================================================
+//  BLOQUER RAFRAÎCHISSEMENT ET RETOUR EN COURS DE PARTIE
+// ============================================================
+// Desktop : avertissement si fermeture/rafraîchissement
+window.addEventListener('beforeunload', (e) => {
+  if (State.roomCode && State.role) {
+    e.preventDefault();
+    e.returnValue = '⚠️ Tu vas quitter la partie en cours !';
+    return e.returnValue;
+  }
+});
+
+// Mobile : pagehide se déclenche quand l'utilisateur quitte (swipe, bouton retour, fermeture)
+window.addEventListener('pagehide', () => {
+  if (State.roomCode && State.role) leaveAll();
+});
+
+// Mobile : si l'onglet passe en arrière-plan puis revient,
+// on vérifie que la salle est toujours active
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && State.roomCode && !State.lastState) {
+    // La salle a disparu pendant l'absence → retour au menu
+    toast('Partie introuvable, retour au menu');
+    leaveAll();
+    showScreen('menu');
+  }
+});
+
+// Bloquer le bouton retour du navigateur pendant une partie
+history.pushState(null, '', location.href);
+window.addEventListener('popstate', () => {
+  history.pushState(null, '', location.href);
+});
 
 // Boutons modale contrôle distant
 $('modal-control-done').addEventListener('click', () => {
@@ -3244,32 +3402,74 @@ function leaveAll() {
 // Emojis réservés à l'hôte (exclus du picker joueur)
 const HOST_RESERVED_EMOJIS = new Set(['🎬']);
 
-function setupEmojiPicker(wrapId, targetVar, defaultEmoji = '⚡') {
-  const wrap = $(wrapId);
-  if (!wrap) return;
-  // Le picker joueur n'affiche pas les emojis réservés
-  const isPlayerPicker = targetVar === 'myEmoji';
-  const filteredEmojis = isPlayerPicker
-    ? EMOJIS.filter(e => !HOST_RESERVED_EMOJIS.has(e))
-    : EMOJIS;
-  wrap.innerHTML = filteredEmojis.map((e) =>
-    `<button class="emoji-pick" data-emoji="${e}">${e}</button>`).join('');
-  State[targetVar] = defaultEmoji;
-  if (targetVar === 'hostEmoji') State._pickedHostEmoji = defaultEmoji;
-  wrap.querySelector('[data-emoji="' + defaultEmoji + '"]')?.classList.add('selected');
-  wrap.addEventListener('click', (ev) => {
-    const btn = ev.target.closest('.emoji-pick');
+// Variable qui trace quel picker est actuellement ouvert
+let _emojiModalTarget = null; // 'host' | 'player'
+
+// Initialise la modale emoji (une seule fois)
+function initEmojiModal() {
+  const grid = $('emoji-modal-grid');
+  // On remplit la grille avec tous les emojis
+  // (on filtre les réservés dynamiquement à l'ouverture)
+  grid.innerHTML = '';
+
+  // Fermeture
+  $('emoji-modal-close').addEventListener('click', closeEmojiModal);
+  $('emoji-modal-overlay').addEventListener('click', (e) => {
+    if (e.target === $('emoji-modal-overlay')) closeEmojiModal();
+  });
+
+  // Clic sur un emoji
+  grid.addEventListener('click', (e) => {
+    const btn = e.target.closest('.emoji-pick');
     if (!btn) return;
-    wrap.querySelectorAll('.emoji-pick').forEach((b) => b.classList.remove('selected'));
+    const emoji = btn.dataset.emoji;
+    if (_emojiModalTarget === 'host') {
+      State.hostEmoji = emoji;
+      State._pickedHostEmoji = emoji;
+      $('create-emoji-preview').textContent = emoji;
+    } else {
+      State.myEmoji = emoji;
+      $('join-emoji-preview').textContent = emoji;
+    }
+    // Mettre à jour la sélection visuelle
+    grid.querySelectorAll('.emoji-pick').forEach(b => b.classList.remove('selected'));
     btn.classList.add('selected');
-    State[targetVar] = btn.dataset.emoji;
-    if (targetVar === 'hostEmoji') State._pickedHostEmoji = btn.dataset.emoji;
+    closeEmojiModal();
   });
 }
-// Picker pour le créateur (créer une partie)
-setupEmojiPicker('create-emoji-picker', 'hostEmoji', '🎬');
-// Picker pour le joueur (rejoindre une partie)
-setupEmojiPicker('emoji-picker', 'myEmoji', '⚡');
+
+function openEmojiModal(target) {
+  _emojiModalTarget = target;
+  const isPlayer = target === 'player';
+  const emojis = isPlayer ? EMOJIS.filter(e => !HOST_RESERVED_EMOJIS.has(e)) : EMOJIS;
+  const current = isPlayer ? State.myEmoji : State.hostEmoji;
+
+  $('emoji-modal-title').textContent = current + ' Choisis ton emoji';
+  const grid = $('emoji-modal-grid');
+  grid.innerHTML = emojis.map(e =>
+    `<button class="emoji-pick ${e === current ? 'selected' : ''}" data-emoji="${e}">${e}</button>`
+  ).join('');
+
+  $('emoji-modal-overlay').classList.remove('hidden');
+  // Scroll vers l'emoji sélectionné
+  const sel = grid.querySelector('.selected');
+  if (sel) sel.scrollIntoView({ block: 'center' });
+}
+
+function closeEmojiModal() {
+  $('emoji-modal-overlay').classList.add('hidden');
+  _emojiModalTarget = null;
+}
+
+// Init pickers (remplace setupEmojiPicker)
+State.hostEmoji = '🎬';
+State._pickedHostEmoji = '🎬';
+State.myEmoji = '⚡';
+
+initEmojiModal();
+
+$('create-emoji-trigger').addEventListener('click', () => openEmojiModal('host'));
+$('join-emoji-trigger').addEventListener('click', () => openEmojiModal('player'));
 
 $('join-code').addEventListener('input', (e) => {
   e.target.value = e.target.value.toUpperCase().replace(/[^A-Z]/g, '');
@@ -3409,13 +3609,16 @@ $('lobby-change-code').addEventListener('click', async () => {
 $('lobby-host-ready').addEventListener('click', async () => {
   if (!State.roomCode || !isHostLike()) return;
   try {
-    await update(ref(db, 'rooms/' + State.roomCode), { hostReady: true });
+    const updates = { hostReady: true };
+    // En mode host_player, l'hôte est aussi joueur : on marque son entrée player comme prête
+    if (State.role === 'host_player') {
+      await update(ref(db, 'rooms/' + State.roomCode + '/players/' + State.uid), { ready: true });
+    }
+    await update(ref(db, 'rooms/' + State.roomCode), updates);
     const btn = $('lobby-host-ready');
     btn.disabled = true;
     btn.classList.remove('ready-pulse');
     btn.textContent = '✓ Tu es prêt';
-    // Note : on ne lance pas la partie ici ; c'est tryAutoLaunch() qui le fait
-    //        quand le rendu détecte que tout le monde est prêt.
   } catch (e) {
     toast("Erreur : " + e.message);
   }
@@ -3439,7 +3642,10 @@ function tryAutoLaunch(data) {
   if (autoLaunchTriggered) return;
   if (!isHostLike()) return;
   if (!data || data.phase !== 'lobby') return;
-  if (!data.hostReady) return;
+
+  const isHostPlayer = State.role === 'host_player';
+  // En mode host_player, l'hôte est dans players → pas besoin de hostReady séparé
+  if (!isHostPlayer && !data.hostReady) return;
 
   const players = Object.entries(data.players || {});
   if (players.length < 1) return;
@@ -3452,7 +3658,6 @@ function tryAutoLaunch(data) {
     if (!allHaveTeam) return;
   }
 
-  // Tout le monde prêt → on lance dans 1.5 s pour laisser le temps de voir l'état "tous prêts"
   autoLaunchTriggered = true;
   if (autoLaunchTimer) clearTimeout(autoLaunchTimer);
   $('lobby-start-hint').innerHTML = '🚀 <b style="color:var(--mint);">Tout le monde est prêt — lancement…</b>';
@@ -4112,12 +4317,18 @@ function renderLobby(data) {
   const ready = players.filter(([_, p]) => p.ready).length;
   const hostReady = !!data.hostReady;
 
-  // Compteur global incluant l'hôte
-  const totalReady = ready + (hostReady ? 1 : 0);
-  const totalNeeded = players.length + 1;   // joueurs + hôte
+  // En mode host_player, l'hôte est DANS la liste players → pas de +1
+  const isHostPlayer = State.role === 'host_player';
+  const totalReady  = isHostPlayer ? ready : ready + (hostReady ? 1 : 0);
+  const totalNeeded = isHostPlayer ? players.length : players.length + 1;
+
   const hintParts = [];
-  hintParts.push(`${totalReady} / ${totalNeeded} prêts (joueurs + animateur)`);
-  if (!hostReady) hintParts.push('Clique "Je suis prêt à animer" pour pouvoir lancer.');
+  if (isHostPlayer) {
+    hintParts.push(`${totalReady} / ${totalNeeded} prêts`);
+  } else {
+    hintParts.push(`${totalReady} / ${totalNeeded} prêts (joueurs + animateur)`);
+    if (!hostReady) hintParts.push('Clique "Je suis prêt à animer" pour pouvoir lancer.');
+  }
   $('lobby-start-hint').innerHTML = players.length
     ? hintParts.join('<br>')
     : 'Au moins 1 joueur doit être connecté.';
@@ -5188,6 +5399,140 @@ function exportPlaylist(id) {
   setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 100);
   toast('📥 Téléchargé');
 }
+// ============================================================
+//  PLEIN ÉCRAN
+// ============================================================
+function isIOS() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+}
+
+function toggleFullscreen() {
+  const btn = $('btn-fullscreen');
+  if (isIOS()) {
+    if (window.navigator.standalone) {
+      btn.textContent = '✅';
+    } else {
+      alert('📱 Sur iPhone/iPad :\n1. Appuie sur Partager (⬆️)\n2. "Sur l\'écran d\'accueil"\n3. Lance l\'app depuis l\'écran d\'accueil pour le plein écran !');
+    }
+    return;
+  }
+  const isFs = document.fullscreenElement || document.webkitFullscreenElement;
+  const elem = document.documentElement;
+  if (!isFs) {
+    const req = elem.requestFullscreen || elem.webkitRequestFullscreen;
+    if (req) req.call(elem).then(() => { btn.textContent = '✕ Quitter'; }).catch(() => {});
+  } else {
+    const exit = document.exitFullscreen || document.webkitExitFullscreen;
+    if (exit) exit.call(document).then(() => { btn.textContent = '📺'; }).catch(() => {});
+  }
+}
+
+document.addEventListener('fullscreenchange', () => {
+  $('btn-fullscreen').textContent = document.fullscreenElement ? '✕ Quitter' : '📺';
+});
+
+$('btn-fullscreen').addEventListener('click', toggleFullscreen);
+
+// ============================================================
+//  WAKE LOCK — empêche l'écran de se mettre en veille
+// ============================================================
+let wakeLock = null;
+let noSleepAudioCtx = null;
+let noSleepInterval = null;
+
+async function requestWakeLock() {
+  try {
+    if ('wakeLock' in navigator) {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => { wakeLock = null; });
+    } else {
+      enableNoSleepFallback();
+    }
+  } catch (err) {
+    enableNoSleepFallback();
+  }
+}
+
+function enableNoSleepFallback() {
+  if (noSleepInterval) return;
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    noSleepAudioCtx = new AudioCtx();
+    const bufferSize = noSleepAudioCtx.sampleRate;
+    const buffer = noSleepAudioCtx.createBuffer(1, bufferSize, noSleepAudioCtx.sampleRate);
+    function playSilent() {
+      if (!noSleepAudioCtx || noSleepAudioCtx.state === 'closed') return;
+      if (noSleepAudioCtx.state === 'suspended') noSleepAudioCtx.resume();
+      const source = noSleepAudioCtx.createBufferSource();
+      source.buffer = buffer;
+      const gain = noSleepAudioCtx.createGain();
+      gain.gain.value = 0.001;
+      source.connect(gain);
+      gain.connect(noSleepAudioCtx.destination);
+      source.start(0);
+    }
+    playSilent();
+    noSleepInterval = setInterval(playSilent, 15000);
+  } catch (e) {}
+}
+
+// Relancer le wake lock si la page revient au premier plan
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && wakeLock === null) {
+    requestWakeLock();
+  }
+});
+
+// Activer dès le premier clic/tap (requis par certains navigateurs)
+document.addEventListener('click', () => { if (!wakeLock && !noSleepInterval) requestWakeLock(); }, { once: true });
+
+// ============================================================
+//  MENU FAB (haut droit)
+// ============================================================
+function updateFabMenu() {
+  const loggedIn = !!currentUser;
+  const isAdmin = loggedIn && currentUser?.isAdmin;
+  $('fab-login').style.display    = loggedIn ? 'none' : '';
+  $('fab-logout').style.display   = loggedIn ? '' : 'none';
+  $('fab-account').style.display  = loggedIn ? '' : 'none';
+  $('fab-playlists').style.display = isAdmin ? '' : 'none';
+  $('fab-sep-auth').style.display = loggedIn ? '' : 'none';
+}
+
+$('btn-menu-fab').addEventListener('click', (e) => {
+  e.stopPropagation();
+  updateFabMenu();
+  $('fab-panel').classList.toggle('open');
+});
+
+// Fermer le panneau en cliquant ailleurs
+document.addEventListener('click', () => $('fab-panel').classList.remove('open'));
+$('fab-panel').addEventListener('click', (e) => e.stopPropagation());
+
+$('fab-home').addEventListener('click', () => {
+  $('fab-panel').classList.remove('open');
+  showScreen('menu');
+});
+$('fab-playlists').addEventListener('click', () => {
+  $('fab-panel').classList.remove('open');
+  showScreen('playlists');
+  refreshPlaylistsScreen();
+});
+$('fab-account').addEventListener('click', () => {
+  $('fab-panel').classList.remove('open');
+  showScreen('account');
+  if (currentUser?.isAdmin) loadUsersList();
+});
+$('fab-login').addEventListener('click', async () => {
+  $('fab-panel').classList.remove('open');
+  const snap = await get(ref(db, 'appUsers'));
+  showScreen(!snap.exists() ? 'setup' : 'login');
+});
+$('fab-logout').addEventListener('click', () => {
+  $('fab-panel').classList.remove('open');
+  doLogout();
+});
 
 </script>
 </body>
