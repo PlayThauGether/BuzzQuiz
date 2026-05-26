@@ -90,8 +90,27 @@ body {
 .wrap-wide { max-width: 1280px; margin: 0 auto; }
 
 h1, h2, h3 { font-family: 'Fraunces', serif; font-weight: 900; line-height: 1.05; }
-.logo { font-family: 'Fraunces', serif; font-weight: 900; font-size: 30px; letter-spacing: -.5px; }
+.logo {
+  font-family: 'Fraunces', serif; font-weight: 900;
+  font-size: 30px; letter-spacing: -.5px;
+  display: flex; align-items: center; gap: 10px;
+}
+.logo img {
+  width: 36px; height: 36px;
+  object-fit: contain; flex: none;
+  filter: invert(1);
+}
 .logo .spark { color: var(--accent); }
+.logo .ptg {
+  font-family: 'Outfit'; font-weight: 400;
+  font-size: 13px; color: var(--ink-dim);
+  white-space: nowrap; letter-spacing: 0;
+}
+@media (max-width: 500px) {
+  .logo .ptg { display: none; }
+  .logo img  { width: 28px; height: 28px; }
+  .logo      { font-size: 24px; gap: 7px; }
+}
 .tagline { color: var(--ink-dim); margin-top: 6px; font-size: 15px; }
 
 /* ============================================================
@@ -174,7 +193,9 @@ input.code-input {
    MENU
    ============================================================ */
 #screen-menu .hero { text-align: center; padding: 56px 0 32px; }
-#screen-menu .hero .logo { font-size: 54px; }
+#screen-menu .hero .logo { font-size: 52px; gap: 16px; justify-content: center; }
+#screen-menu .hero .logo img { width: 54px; height: 54px; }
+#screen-menu .hero .logo .ptg { font-size: 16px; }
 .menu-buttons { display: grid; gap: 14px; }
 .menu-btn {
   text-align: left; border: 1px solid var(--line);
@@ -440,11 +461,18 @@ input.code-input {
   .big-code-box .big-code { font-size: 44px; letter-spacing: 8px; }
 }
 
+/* QR Code — fond blanc centré, coins arrondis, ombre légère */
 .qr-holder {
-  background: #fff; padding: 14px; border-radius: 16px;
-  display: inline-block;
+  display: block;
+  text-align: center;
+  margin: 0 auto;
 }
-.qr-holder canvas { display: block; width: 200px; height: 200px; }
+.qr-holder canvas {
+  display: inline-block;
+  border-radius: 16px;
+  width: 220px;
+  height: 220px;
+}
 
 .players-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; max-height: 360px; overflow-y: auto; }
 .player-row {
@@ -1100,7 +1128,7 @@ input.code-input {
 <section id="screen-menu" class="screen active">
   <div class="wrap">
     <div class="hero">
-      <div class="logo">Buzz<span class="spark">Quiz</span></div>
+      <div class="logo"><img src="./logo-ptg.png" alt="PTG">Buzz<span class="spark">Quiz</span><span class="ptg">par Play Thau'Gether</span></div>
       <p class="tagline">Quiz interactif pour vos soirées</p>
     </div>
 
@@ -1158,7 +1186,7 @@ input.code-input {
 <section id="screen-join-choice" class="screen">
   <div class="wrap">
     <div class="topbar">
-      <div class="logo">Buzz<span class="spark">Quiz</span></div>
+      <div class="logo"><img src="./logo-ptg.png" alt="PTG">Buzz<span class="spark">Quiz</span><span class="ptg">par Play Thau'Gether</span></div>
       <button class="link-btn" data-home>← Retour</button>
     </div>
     <h2 style="font-size:24px; padding: 0 4px;">Rejoindre une partie</h2>
@@ -1171,13 +1199,20 @@ input.code-input {
           <p>Tape le code et participe au quiz.</p>
         </div>
       </button>
-      <button class="menu-btn" id="join-as-control">
+      <!-- Visible uniquement si connecté -->
+      <button class="menu-btn" id="join-as-control" style="display:none;">
         <div class="emoji">📱</div>
         <div>
-          <h3>Comme animateur (contrôle distant)</h3>
-          <p>Tape le code + PIN pour piloter la partie.</p>
+          <h3>Contrôle distant (animateur)</h3>
+          <p>Scanne le QR ou tape le code + PIN.</p>
         </div>
       </button>
+      <!-- Affiché si non connecté -->
+      <div id="join-control-locked" class="card" style="display:none; opacity:.6; padding:16px; text-align:center;">
+        <div style="font-size:28px;">🔒</div>
+        <div style="font-weight:700; margin-top:6px;">Contrôle distant</div>
+        <p class="muted" style="font-size:13px; margin-top:4px;">Réservé aux animateurs connectés.<br>Connecte-toi depuis le menu principal.</p>
+      </div>
     </div>
   </div>
 </section>
@@ -1186,19 +1221,22 @@ input.code-input {
 <section id="screen-create" class="screen">
   <div class="wrap">
     <div class="topbar">
-      <div class="logo">Buzz<span class="spark">Quiz</span></div>
+      <div class="logo"><img src="./logo-ptg.png" alt="PTG">Buzz<span class="spark">Quiz</span><span class="ptg">par Play Thau'Gether</span></div>
       <button class="link-btn" data-home>← Retour</button>
     </div>
     <div class="card">
       <h2 style="font-size:24px;">🎮 Créer une partie</h2>
       <p class="muted" style="margin-top:6px;">Configure ta partie puis lance.</p>
 
-      <!-- Pseudo + emoji du créateur (toujours, qu'il joue ou pas) -->
-      <label>Ton pseudo</label>
-      <input type="text" id="create-name" maxlength="20" placeholder="Ex : Camille" />
-
-      <label>Ton emoji</label>
-      <div class="emoji-picker" id="create-emoji-picker" style="max-height:140px;"></div>
+      <!-- Pseudo + emoji du créateur (masqués en mode hôte affichage) -->
+      <div id="create-name-wrap">
+        <label>Ton pseudo</label>
+        <input type="text" id="create-name" maxlength="20" placeholder="Ex : Camille" />
+      </div>
+      <div id="create-emoji-wrap">
+        <label>Ton emoji</label>
+        <div class="emoji-picker" id="create-emoji-picker" style="max-height:140px;"></div>
+      </div>
 
       <label>Mode de jeu</label>
       <div class="option-group" id="opt-mode">
@@ -1318,7 +1356,7 @@ input.code-input {
 <section id="screen-join" class="screen">
   <div class="wrap">
     <div class="topbar">
-      <div class="logo">Buzz<span class="spark">Quiz</span></div>
+      <div class="logo"><img src="./logo-ptg.png" alt="PTG">Buzz<span class="spark">Quiz</span><span class="ptg">par Play Thau'Gether</span></div>
       <button class="link-btn" data-home>← Retour</button>
     </div>
     <div class="card">
@@ -1339,12 +1377,12 @@ input.code-input {
 <section id="screen-control-join" class="screen">
   <div class="wrap">
     <div class="topbar">
-      <div class="logo">Buzz<span class="spark">Quiz</span></div>
+      <div class="logo"><img src="./logo-ptg.png" alt="PTG">Buzz<span class="spark">Quiz</span><span class="ptg">par Play Thau'Gether</span></div>
       <button class="link-btn" data-home>← Retour</button>
     </div>
     <div class="card">
       <h2 style="font-size:24px;">Contrôle distant</h2>
-      <p class="muted" style="margin-top:6px;">Tape le code de la salle et le PIN à 4 chiffres affiché sur l'écran de projection.</p>
+      <p class="muted" style="margin-top:6px;">Tape le code de la salle et le PIN à 4 chiffres. Le QR de connexion t'a été montré privément par l'animateur.</p>
       <label>Code de la salle</label>
       <input id="cj-code" class="code-input" maxlength="4" autocomplete="off" placeholder="ABCD" />
       <label>PIN à 4 chiffres</label>
@@ -1359,7 +1397,7 @@ input.code-input {
 <section id="screen-lobby" class="screen">
   <div class="wrap-wide">
     <div class="topbar">
-      <div class="logo">Buzz<span class="spark">Quiz</span></div>
+      <div class="logo"><img src="./logo-ptg.png" alt="PTG">Buzz<span class="spark">Quiz</span><span class="ptg">par Play Thau'Gether</span></div>
       <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
         <span id="lobby-mode-tag" class="status-tag status-idle"><span class="dot"></span>Buzzer</span>
         <button class="link-btn" data-close-room>Fermer la salle</button>
@@ -1374,7 +1412,10 @@ input.code-input {
             <div class="big-code-lbl">Code de la partie</div>
             <div class="big-code" id="lobby-code">----</div>
           </div>
-          <div style="text-align:center; margin-top:18px;">
+          <div style="text-align:center; margin-top:6px;">
+            <button class="link-btn" id="lobby-change-code" style="font-size:12px; color:var(--ink-dim);">🔄 Changer de code</button>
+          </div>
+          <div style="margin-top:14px;">
             <div class="qr-holder"><canvas id="lobby-qr"></canvas></div>
           </div>
           <p class="muted" style="text-align:center; margin-top:10px; font-size:13px;">
@@ -1385,14 +1426,6 @@ input.code-input {
         <div class="card" style="margin-top:14px;">
           <div class="section-title" style="margin-top:0;">Récap de la partie</div>
           <p class="muted" id="lobby-recap">…</p>
-        </div>
-
-        <div class="card" style="margin-top:14px;" id="lobby-pin-card">
-          <div class="pin-box" style="margin-top:0;">
-            <div class="pin-lbl">🔒 PIN pour le contrôle distant</div>
-            <div class="pin" id="lobby-pin">----</div>
-            <div class="pin-tip">À taper sur le téléphone de l'animateur</div>
-          </div>
         </div>
       </div>
 
@@ -1478,7 +1511,7 @@ input.code-input {
 <section id="screen-projection" class="screen">
   <div class="wrap-wide">
     <div class="topbar">
-      <div class="logo">Buzz<span class="spark">Quiz</span></div>
+      <div class="logo"><img src="./logo-ptg.png" alt="PTG">Buzz<span class="spark">Quiz</span><span class="ptg">par Play Thau'Gether</span></div>
       <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
         <div class="room-pill">
           <span class="lbl">Salle</span>
@@ -1703,7 +1736,7 @@ input.code-input {
 <section id="screen-playlists" class="screen">
   <div class="wrap">
     <div class="topbar">
-      <div class="logo">Buzz<span class="spark">Quiz</span></div>
+      <div class="logo"><img src="./logo-ptg.png" alt="PTG">Buzz<span class="spark">Quiz</span><span class="ptg">par Play Thau'Gether</span></div>
       <button class="link-btn" data-home>← Retour</button>
     </div>
     <div class="card">
@@ -1733,7 +1766,7 @@ input.code-input {
 <section id="screen-playlist-edit" class="screen">
   <div class="wrap">
     <div class="topbar">
-      <div class="logo">Buzz<span class="spark">Quiz</span></div>
+      <div class="logo"><img src="./logo-ptg.png" alt="PTG">Buzz<span class="spark">Quiz</span><span class="ptg">par Play Thau'Gether</span></div>
       <button class="link-btn" id="ple-back">← Retour</button>
     </div>
     <div class="card">
@@ -1768,7 +1801,7 @@ input.code-input {
 <section id="screen-setup" class="screen">
   <div class="wrap">
     <div class="topbar">
-      <div class="logo">Buzz<span class="spark">Quiz</span></div>
+      <div class="logo"><img src="./logo-ptg.png" alt="PTG">Buzz<span class="spark">Quiz</span><span class="ptg">par Play Thau'Gether</span></div>
     </div>
     <div class="card">
       <h2 style="font-size:24px;">🛠 Première configuration</h2>
@@ -1789,7 +1822,7 @@ input.code-input {
 <section id="screen-login" class="screen">
   <div class="wrap">
     <div class="topbar">
-      <div class="logo">Buzz<span class="spark">Quiz</span></div>
+      <div class="logo"><img src="./logo-ptg.png" alt="PTG">Buzz<span class="spark">Quiz</span><span class="ptg">par Play Thau'Gether</span></div>
       <button class="link-btn" data-home>← Retour</button>
     </div>
     <div class="card">
@@ -1809,7 +1842,7 @@ input.code-input {
 <section id="screen-account" class="screen">
   <div class="wrap">
     <div class="topbar">
-      <div class="logo">Buzz<span class="spark">Quiz</span></div>
+      <div class="logo"><img src="./logo-ptg.png" alt="PTG">Buzz<span class="spark">Quiz</span><span class="ptg">par Play Thau'Gether</span></div>
       <button class="link-btn" data-home>← Retour</button>
     </div>
     <div class="card">
@@ -1851,11 +1884,37 @@ input.code-input {
 
 <div class="toast" id="toast"></div>
 <div class="dyn-msg" id="dyn-msg"></div>
+
+<!-- Modale "Prends le contrôle" — visible uniquement sur l'écran de l'hôte, jamais projeté -->
+<div class="modal-backdrop" id="modal-control-setup">
+  <div class="modal" style="text-align:center; max-width:420px;">
+    <h3 style="font-size:22px; margin-bottom:6px;">📱 Prends le contrôle</h3>
+    <p class="muted" style="font-size:14px; margin-bottom:18px;">
+      Scanne ce QR avec <b>ton téléphone</b> pour piloter la partie.<br>
+      Ce code ne sera plus affiché — c'est maintenant ou jamais !
+    </p>
+    <div class="qr-holder" style="margin-bottom:14px;">
+      <canvas id="modal-control-qr"></canvas>
+    </div>
+    <div class="pin-box" style="margin-bottom:14px;">
+      <div class="pin-lbl">🔒 PIN (affiché une seule fois)</div>
+      <div class="pin" id="modal-control-pin">----</div>
+      <div class="pin-tip" id="modal-control-url" style="word-break:break-all; font-size:11px; color:var(--accent-2); margin-top:6px;"></div>
+    </div>
+    <p class="muted" style="font-size:12px; margin-bottom:16px;">
+      Joue sans contrôle distant ? Passe cette étape.
+    </p>
+    <div class="btn-row">
+      <button class="btn ghost" id="modal-control-skip">Passer</button>
+      <button class="btn mint" id="modal-control-done">✓ J'ai scanné, afficher le lobby</button>
+    </div>
+  </div>
+</div>
 <!-- Conteneur isolé pour les emojis flottants : overflow:hidden évite la scrollbar -->
 <div id="emoji-float-container" style="position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:150;"></div>
 
-<!-- QRCode lib (CDN) -->
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<!-- QR Code lib : QRious (même librairie que le Blind Test PTG) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
 
 <!-- ============================================================
      SCRIPT PRINCIPAL — tout dans un module
@@ -2000,6 +2059,9 @@ function updateAuthUI() {
   $('user-bar').style.display = loggedIn ? '' : 'none';
   $('menu-playlists').style.display = isAdmin ? '' : 'none';
   $('menu-login').style.display = loggedIn ? 'none' : '';
+  // Contrôle distant : visible seulement si connecté
+  $('join-as-control').style.display = loggedIn ? '' : 'none';
+  $('join-control-locked').style.display = loggedIn ? 'none' : '';
   if (loggedIn) {
     $('user-bar-name').textContent = currentUser.username;
     $('user-bar-role').textContent = isAdmin ? '👑 Admin' : 'Utilisateur';
@@ -2214,12 +2276,69 @@ function initFirebase() {
       showScreen('join');
       setTimeout(() => $('join-name').focus(), 100);
     }
+    // Si l'URL contient ?cjoin=CODE&pin=PIN → accès direct au contrôle distant
+    const cj = params.get('cjoin');
+    const cp = params.get('pin');
+    if (cj && /^[A-Z]{4}$/i.test(cj) && cp) {
+      $('cj-code').value = cj.toUpperCase();
+      $('cj-pin').value = cp;
+      showScreen('control-join');
+      // Auto-submit
+      setTimeout(() => joinAsControl(), 300);
+    }
   });
 }
 
 function serverNow() { return Date.now() + State.clockOffset; }
 
+// Génère un QR code dans un canvas avec QRious — thème sombre intégré à l'app
+function makeQR(canvasEl, url, size = 220) {
+  if (!window.QRious) { console.warn('QRious non chargé'); return; }
+  if (!canvasEl) return;
+  new QRious({
+    element: canvasEl,
+    value: url,
+    size: size,
+    level: 'M',
+    background: '#ffffff',
+    foreground: '#0d0b1f',
+    backgroundAlpha: 1,
+    foregroundAlpha: 1,
+    padding: 16,
+  });
+  canvasEl.style.width  = size + 'px';
+  canvasEl.style.height = size + 'px';
+}
+
+// Code de salle PERSISTANT — même code entre les parties (sauvegardé en localStorage)
+const ROOM_CODE_KEY = 'buzzquiz_room_code';
+
+function getRoomCode() {
+  const saved = localStorage.getItem(ROOM_CODE_KEY);
+  if (saved && /^[A-Z]{4}$/.test(saved)) return saved;
+  return null;
+}
+
+function saveRoomCode(code) {
+  localStorage.setItem(ROOM_CODE_KEY, code);
+}
+
+function clearRoomCode() {
+  localStorage.removeItem(ROOM_CODE_KEY);
+}
+
 initFirebase();
+
+// Boutons modale contrôle distant
+$('modal-control-done').addEventListener('click', () => {
+  $('modal-control-setup').classList.remove('active');
+  showScreen('lobby');
+});
+$('modal-control-skip').addEventListener('click', () => {
+  if (!confirm('Sans contrôle distant, tu ne pourras pas piloter la partie depuis ton téléphone. Continuer ?')) return;
+  $('modal-control-setup').classList.remove('active');
+  showScreen('lobby');
+});
 
 // ============================================================
 //  CODES & PIN
@@ -2359,6 +2478,9 @@ $('menu-create').addEventListener('click', () => {
 });
 $('menu-join').addEventListener('click', () => {
   if (!State.ready) return toast('Service pas encore prêt');
+  // Met à jour les options visibles selon la connexion
+  $('join-as-control').style.display = currentUser ? '' : 'none';
+  $('join-control-locked').style.display = currentUser ? 'none' : '';
   showScreen('join-choice');
 });
 
@@ -2427,28 +2549,41 @@ function applyModeUI(mode) {
 
   const hostTog = $('opt-host-mode');
   if (mode === 'buzzer') {
-    // En Buzzer, le mode hôte d'affichage est OBLIGATOIRE
-    hostTog.classList.add('on');
-    hostTog.classList.add('disabled');
+    // Buzzer = toujours mode hôte affichage
+    hostTog.classList.add('on', 'disabled');
     $('host-mode-desc').textContent = 'Obligatoire en mode Buzzer : cet écran sert d\'affichage et tu pilotes depuis ton téléphone.';
     $('host-mode-note').style.display = 'none';
   } else {
-    // En QCM, libre choix
-    hostTog.classList.remove('disabled');
+    // QCM = OFF par défaut
+    hostTog.classList.remove('disabled', 'on');
     $('host-mode-desc').textContent = 'Cet écran sert d\'affichage public uniquement. Tu ne joues pas, tu animes.';
     $('host-mode-note').style.display = '';
-    updateHostModeNote();
+  }
+  updateHostModeUI();
+}
+
+// Met à jour l'affichage des champs nom/emoji selon l'état du toggle hôte
+function updateHostModeUI() {
+  const isHostDisplay = $('opt-host-mode').classList.contains('on');
+  const nameWrap = $('create-name-wrap');
+  const emojiWrap = $('create-emoji-wrap');
+  if (isHostDisplay) {
+    // Mode hôte affichage : pas de nom, identité fixe
+    nameWrap.style.display = 'none';
+    emojiWrap.style.display = 'none';
+    State.hostName  = 'Hôte';
+    State.hostEmoji = '🎬';
+  } else {
+    // Mode joueur : champs normaux
+    nameWrap.style.display = '';
+    emojiWrap.style.display = '';
+    // Remet les valeurs saisies / picker
+    State.hostName  = ($('create-name').value || '').trim();
+    State.hostEmoji = State._pickedHostEmoji || '⚡';
   }
 }
 
-function updateHostModeNote() {
-  const isOn = $('opt-host-mode').classList.contains('on');
-  if (isOn) {
-    $('host-mode-note').textContent = 'ℹ Tu seras juste un écran. Les joueurs scannent le QR code pour rejoindre.';
-  } else {
-    $('host-mode-note').textContent = 'ℹ Tu joues directement sur cet appareil avec les autres joueurs.';
-  }
-}
+function updateHostModeNote() { updateHostModeUI(); }
 
 // Boutons changement de mode dans l'écran Créer
 document.addEventListener('click', (e) => {
@@ -2467,9 +2602,9 @@ document.addEventListener('click', (e) => {
 // Toggle Mode hôte affichage
 $('opt-host-mode').addEventListener('click', () => {
   const tog = $('opt-host-mode');
-  if (tog.classList.contains('disabled')) return;  // forcé en mode buzzer
+  if (tog.classList.contains('disabled')) return;
   tog.classList.toggle('on');
-  updateHostModeNote();
+  updateHostModeUI();
 });
 
 // Groupes de boutons d'option (un seul actif par groupe)
@@ -2802,32 +2937,54 @@ $('create-launch').addEventListener('click', async () => {
     State.teamsConfig = { enabled: false, list: [] };
   }
 
-  // Pseudo + emoji du créateur
-  State.hostName = ($('create-name').value || '').trim().slice(0, 20);
-  if (!State.hostName) { toast('Entre ton pseudo'); return; }
-
   // Mode hôte affichage
   const hostMode = $('opt-host-mode').classList.contains('on');
   State.hostMode = hostMode;
 
+  // Pseudo + emoji : forcés si mode hôte affichage, sinon saisis
+  if (hostMode) {
+    State.hostName  = 'Hôte';
+    State.hostEmoji = '🎬';
+  } else {
+    State.hostName = ($('create-name').value || '').trim().slice(0, 20);
+    if (!State.hostName) { toast('Entre ton pseudo'); return; }
+    // State.hostEmoji déjà mis à jour par le picker
+  }
+
   if (State.isRestartMode) {
-    // RESTART : on réutilise la salle existante
     try {
       await restartRoom();
-      showScreen('lobby');
+      showControlModalThenLobby();
     } catch (e) {
       toast("Impossible de relancer : " + e.message);
     }
   } else {
-    // Nouvelle salle
     try {
       await createRoom();
-      showScreen('lobby');
+      showControlModalThenLobby();
     } catch (e) {
       toast("Impossible de créer la salle : " + e.message);
     }
   }
 });
+
+// Affiche la modale "prends le contrôle" si mode buzzer+hôte, sinon va direct au lobby
+function showControlModalThenLobby() {
+  // Modale utile uniquement si mode buzzer + hôte affichage (sinon pas de contrôle distant)
+  if (State.mode !== 'buzzer' || !State.hostMode) {
+    showScreen('lobby');
+    return;
+  }
+
+  const code = State.roomCode;
+  const pin  = State.controlPin;
+  const url  = location.origin + location.pathname + '?cjoin=' + code + '&pin=' + pin;
+
+  $('modal-control-pin').textContent = pin;
+  $('modal-control-url').textContent = url;
+  makeQR($('modal-control-qr'), url, 200);
+  $('modal-control-setup').classList.add('active');
+}
 
 // ============================================================
 //  CRÉATION DE LA SALLE (côté projection)
@@ -2842,11 +2999,24 @@ async function createRoom() {
   hostBtn.textContent = '✅ Je suis prêt à animer';
 
   let code, tries = 0, exists = true;
-  do {
-    code = makeRoomCode();
-    const snap = await get(ref(db, 'rooms/' + code));
-    exists = snap.exists();
-  } while (exists && ++tries < 10);
+  // Essaie d'abord le code sauvegardé (code persistant entre les parties)
+  const savedCode = getRoomCode();
+  if (savedCode) {
+    const snapSaved = await get(ref(db, 'rooms/' + savedCode));
+    if (!snapSaved.exists()) {
+      code = savedCode;
+      exists = false;
+    }
+  }
+  // Si le code sauvegardé est déjà pris (partie en cours), on en génère un nouveau
+  if (exists) {
+    do {
+      code = makeRoomCode();
+      const snap = await get(ref(db, 'rooms/' + code));
+      exists = snap.exists();
+    } while (exists && ++tries < 10);
+    saveRoomCode(code); // mémorise le nouveau code
+  }
 
   State.controlPin = makePin();
   State.roomCode = code;
@@ -2906,7 +3076,6 @@ async function createRoom() {
   // Setup UI lobby
   $('lobby-code').textContent = code;
   $('proj-code').textContent = code;
-  $('lobby-pin').textContent = State.controlPin;
   $('lobby-mode-tag').className = 'status-tag ' + (State.mode === 'qcm' ? 'status-armed' : 'status-locked');
   $('lobby-mode-tag').innerHTML = '<span class="dot"></span>Mode ' + (State.mode === 'qcm' ? 'QCM' : 'Buzzer') + (State.teamsConfig.enabled ? ' · 🚩 équipes' : '');
   const teamRecap = State.teamsConfig.enabled
@@ -2917,15 +3086,9 @@ async function createRoom() {
     : `<b>${escapeHtml(State.playlist.name)}</b><br>${State.qcmConfig.nbQuestions} questions · pilotage depuis ton téléphone (PIN ci-dessous)${teamRecap}`;
   $('lobby-recap').innerHTML = recap;
 
-  // QR code avec ?join=CODE
+  // QR code avec ?join=CODE (généré avec QRious)
   const url = location.origin + location.pathname + '?join=' + code;
-  if (window.QRCode) {
-    QRCode.toCanvas($('lobby-qr'), url, { width: 200, margin: 1 }, () => {});
-  }
-
-  // PIN visible uniquement en mode buzzer AVEC hôte d'affichage
-  // (pas de contrôle distant si l'hôte joue lui-même)
-  $('lobby-pin-card').style.display = (State.mode === 'buzzer' && State.hostMode) ? '' : 'none';
+  makeQR($('lobby-qr'), url, 200);
 
   // Listen room
   listenRoom(code);
@@ -2999,7 +3162,6 @@ async function restartRoom() {
   // Mise à jour de l'UI lobby
   $('lobby-code').textContent = code;
   $('proj-code').textContent = code;
-  $('lobby-pin').textContent = State.controlPin;
   $('lobby-mode-tag').className = 'status-tag ' + (State.mode === 'qcm' ? 'status-armed' : 'status-locked');
   $('lobby-mode-tag').innerHTML = '<span class="dot"></span>Mode '
     + (State.mode === 'qcm' ? 'QCM' : 'Buzzer')
@@ -3011,7 +3173,6 @@ async function restartRoom() {
     ? `<b>${escapeHtml(State.playlist.name)}</b><br>${State.qcmConfig.nbQuestions} questions · ${State.qcmConfig.timerSec}s · révélation ${State.qcmConfig.revealSec}s${teamRecap}`
     : `<b>${escapeHtml(State.playlist.name)}</b><br>${State.qcmConfig.nbQuestions} questions${teamRecap}`;
   $('lobby-recap').innerHTML = recap;
-  $('lobby-pin-card').style.display = (State.mode === 'buzzer' && State.hostMode) ? '' : 'none';
 }
 
 // ============================================================
@@ -3081,12 +3242,21 @@ function leaveAll() {
 // ============================================================
 // Setup d'un picker emoji générique
 // targetVar : 'myEmoji' (join) ou 'hostEmoji' (create)
+// Emojis réservés à l'hôte (exclus du picker joueur)
+const HOST_RESERVED_EMOJIS = new Set(['🎬']);
+
 function setupEmojiPicker(wrapId, targetVar, defaultEmoji = '⚡') {
   const wrap = $(wrapId);
   if (!wrap) return;
-  wrap.innerHTML = EMOJIS.map((e) =>
+  // Le picker joueur n'affiche pas les emojis réservés
+  const isPlayerPicker = targetVar === 'myEmoji';
+  const filteredEmojis = isPlayerPicker
+    ? EMOJIS.filter(e => !HOST_RESERVED_EMOJIS.has(e))
+    : EMOJIS;
+  wrap.innerHTML = filteredEmojis.map((e) =>
     `<button class="emoji-pick" data-emoji="${e}">${e}</button>`).join('');
   State[targetVar] = defaultEmoji;
+  if (targetVar === 'hostEmoji') State._pickedHostEmoji = defaultEmoji;
   wrap.querySelector('[data-emoji="' + defaultEmoji + '"]')?.classList.add('selected');
   wrap.addEventListener('click', (ev) => {
     const btn = ev.target.closest('.emoji-pick');
@@ -3094,6 +3264,7 @@ function setupEmojiPicker(wrapId, targetVar, defaultEmoji = '⚡') {
     wrap.querySelectorAll('.emoji-pick').forEach((b) => b.classList.remove('selected'));
     btn.classList.add('selected');
     State[targetVar] = btn.dataset.emoji;
+    if (targetVar === 'hostEmoji') State._pickedHostEmoji = btn.dataset.emoji;
   });
 }
 // Picker pour le créateur (créer une partie)
@@ -3111,6 +3282,14 @@ $('join-name').addEventListener('keydown', (e) => { if (e.key === 'Enter') joinA
 async function joinAsPlayer() {
   const name = $('join-name').value.trim();
   if (!name) return toast('Entre ton pseudo');
+
+  // Noms et emojis réservés à l'hôte
+  if (name.toLowerCase() === 'hôte' || name.toLowerCase() === 'hote') {
+    return toast('❌ Ce pseudo est réservé à l\'animateur');
+  }
+  if (State.myEmoji === '🎬') {
+    return toast('❌ Cet emoji est réservé à l\'animateur');
+  }
 
   const code = $('join-code').value.trim();
   if (code.length !== 4) return toast('Code = 4 lettres');
@@ -3206,6 +3385,26 @@ async function joinAsControl() {
 //  DÉMARRAGE DE LA PARTIE
 // ============================================================
 $('lobby-start').addEventListener('click', startGame);
+
+// Changer de code (génère un nouveau code, ferme et recrée la salle)
+$('lobby-change-code').addEventListener('click', async () => {
+  if (!isHostLike() || !State.roomCode) return;
+  if (!confirm('Changer le code ? Les joueurs déjà connectés seront déconnectés.')) return;
+  // Génère et mémorise un nouveau code
+  const letters = 'ABCDEFGHJKLMNPRSTUVWXYZ';
+  let newCode, tries = 0, exists = true;
+  do {
+    newCode = '';
+    for (let i = 0; i < 4; i++) newCode += letters[Math.floor(Math.random() * letters.length)];
+    const snap = await get(ref(db, 'rooms/' + newCode));
+    exists = snap.exists();
+  } while (exists && ++tries < 10);
+  saveRoomCode(newCode);
+  // Ferme l'ancienne salle et recrée avec le nouveau code
+  await closeRoom();
+  await createRoom();
+  showControlModalThenLobby();
+});
 
 // Bouton "Je suis prêt à animer" (hôte)
 $('lobby-host-ready').addEventListener('click', async () => {
