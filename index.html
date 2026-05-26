@@ -1023,6 +1023,19 @@ input.code-input {
       <p class="tagline">Quiz interactif pour vos soirées</p>
     </div>
 
+    <!-- Barre utilisateur -->
+    <div id="user-bar" style="margin-bottom:16px; display:none;">
+      <div class="card" style="display:flex; align-items:center; gap:12px; padding:12px 16px;">
+        <span style="font-size:22px;">👑</span>
+        <div style="flex:1;">
+          <div style="font-weight:700;" id="user-bar-name">—</div>
+          <div style="font-size:12px; color:var(--accent-2);" id="user-bar-role">Admin</div>
+        </div>
+        <button class="link-btn" id="menu-account" style="font-size:13px;">Mon compte</button>
+        <button class="link-btn" id="menu-logout" style="font-size:13px; color:var(--accent);">Déconnexion</button>
+      </div>
+    </div>
+
     <div class="menu-buttons">
       <button class="menu-btn" id="menu-create">
         <div class="emoji">🎮</div>
@@ -1038,11 +1051,20 @@ input.code-input {
           <p>Joueur ou contrôle distant.</p>
         </div>
       </button>
-      <button class="menu-btn" id="menu-playlists">
+      <!-- Visible seulement si admin -->
+      <button class="menu-btn" id="menu-playlists" style="display:none;">
         <div class="emoji">📚</div>
         <div>
-          <h3>Mes playlists</h3>
-          <p>Créer, modifier, supprimer tes playlists de questions.</p>
+          <h3>Gérer les playlists</h3>
+          <p>Créer, modifier, supprimer les playlists.</p>
+        </div>
+      </button>
+      <!-- Visible si non connecté -->
+      <button class="menu-btn" id="menu-login">
+        <div class="emoji">🔑</div>
+        <div>
+          <h3>Connexion admin</h3>
+          <p>Connecte-toi pour gérer les playlists.</p>
         </div>
       </button>
     </div>
@@ -1583,6 +1605,89 @@ input.code-input {
   </div>
 </section>
 
+<!-- ===================== SETUP (premier compte) ===================== -->
+<section id="screen-setup" class="screen">
+  <div class="wrap">
+    <div class="topbar">
+      <div class="logo">Buzz<span class="spark">Quiz</span></div>
+    </div>
+    <div class="card">
+      <h2 style="font-size:24px;">🛠 Première configuration</h2>
+      <p class="muted" style="margin-top:6px;">Crée le compte administrateur. Il sera le seul à pouvoir gérer les playlists. Ce compte est créé une seule fois.</p>
+      <label>Nom d'utilisateur</label>
+      <input type="text" id="setup-username" maxlength="30" placeholder="Ex : admin" autocomplete="off" />
+      <label>Mot de passe</label>
+      <input type="password" id="setup-password" placeholder="Min. 4 caractères" />
+      <label>Confirmer le mot de passe</label>
+      <input type="password" id="setup-password2" placeholder="Répète le mot de passe" />
+      <div style="height:18px;"></div>
+      <button class="btn primary btn-xl" id="setup-btn">✅ Créer le compte admin</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== LOGIN ===================== -->
+<section id="screen-login" class="screen">
+  <div class="wrap">
+    <div class="topbar">
+      <div class="logo">Buzz<span class="spark">Quiz</span></div>
+      <button class="link-btn" data-home>← Retour</button>
+    </div>
+    <div class="card">
+      <h2 style="font-size:24px;">🔑 Connexion</h2>
+      <p class="muted" style="margin-top:6px;">Connecte-toi pour gérer les playlists.</p>
+      <label>Nom d'utilisateur</label>
+      <input type="text" id="login-username" maxlength="30" placeholder="Ton identifiant" autocomplete="off" />
+      <label>Mot de passe</label>
+      <input type="password" id="login-password" placeholder="Mot de passe" />
+      <div style="height:18px;"></div>
+      <button class="btn primary btn-xl" id="login-btn">Connexion</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== MON COMPTE ===================== -->
+<section id="screen-account" class="screen">
+  <div class="wrap">
+    <div class="topbar">
+      <div class="logo">Buzz<span class="spark">Quiz</span></div>
+      <button class="link-btn" data-home>← Retour</button>
+    </div>
+    <div class="card">
+      <h2 style="font-size:24px;">👤 Mon compte</h2>
+      <p class="muted" style="margin-top:6px;">Connecté en tant que <b id="account-username">—</b></p>
+
+      <div class="section-title" style="margin-top:20px;">Changer le mot de passe</div>
+      <label>Mot de passe actuel</label>
+      <input type="password" id="account-old-pass" placeholder="Mot de passe actuel" />
+      <label>Nouveau mot de passe</label>
+      <input type="password" id="account-new-pass" placeholder="Nouveau mot de passe" />
+      <div style="height:10px;"></div>
+      <button class="btn mint" id="account-change-pass">💾 Changer le mot de passe</button>
+
+      <!-- Section Admin : gestion des utilisateurs -->
+      <div id="account-admin-section" style="display:none;">
+        <div class="section-title" style="margin-top:22px;">👑 Gestion des utilisateurs</div>
+        <div id="account-users-list" style="margin-bottom:14px;"></div>
+        <div class="card" style="padding:14px;">
+          <div style="font-weight:700; margin-bottom:10px;">Créer un compte</div>
+          <input type="text" id="admin-new-username" maxlength="30" placeholder="Nom d'utilisateur" style="margin-bottom:8px;" />
+          <input type="password" id="admin-new-password" placeholder="Mot de passe" style="margin-bottom:8px;" />
+          <div class="toggle-row" style="margin-top:6px; margin-bottom:10px;">
+            <div><div class="toggle-label">Admin</div><div class="toggle-desc">Peut gérer les playlists</div></div>
+            <div class="toggle-switch" id="admin-new-isadmin"></div>
+          </div>
+          <button class="btn primary" id="admin-create-user-btn">➕ Créer ce compte</button>
+        </div>
+      </div>
+
+      <div style="text-align:center; margin-top:20px;">
+        <button class="link-btn" id="account-logout-btn" style="color:var(--accent);">🚪 Déconnexion</button>
+      </div>
+    </div>
+  </div>
+</section>
+
 </div><!-- /.app -->
 
 <div class="toast" id="toast"></div>
@@ -1615,7 +1720,7 @@ import { getAuth, signInAnonymously, onAuthStateChanged }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import {
   getDatabase, ref, set, update, remove, get,
-  onValue, onDisconnect, serverTimestamp, child
+  onValue, onDisconnect, serverTimestamp, child, push
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 
 // ============================================================
@@ -1672,7 +1777,7 @@ const TEAM_COUNT_MAX = 6;
 // ============================================================
 const $ = (id) => document.getElementById(id);
 
-const SCREENS = ['menu', 'create', 'join-choice', 'join', 'control-join', 'lobby', 'player-lobby', 'projection', 'control', 'player', 'podium', 'playlists', 'playlist-edit'];
+const SCREENS = ['menu', 'create', 'join-choice', 'join', 'control-join', 'lobby', 'player-lobby', 'projection', 'control', 'player', 'podium', 'playlists', 'playlist-edit', 'setup', 'login', 'account'];
 
 function showScreen(name) {
   SCREENS.forEach((s) => $('screen-' + s).classList.toggle('active', s === name));
@@ -1695,6 +1800,189 @@ function escapeHtml(s) {
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
   }[c]));
 }
+
+// ============================================================
+//  SYSTÈME AUTH (username + password, stocké dans Firebase)
+// ============================================================
+let currentUser = null; // { username, isAdmin }
+
+async function hashPassword(password) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password + '_buzzquiz_salt');
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function initAuth() {
+  const saved = localStorage.getItem('buzzquizAuth');
+  if (saved) {
+    try {
+      const session = JSON.parse(saved);
+      const snap = await get(ref(db, 'appUsers/' + session.username));
+      if (snap.exists()) {
+        const u = snap.val();
+        currentUser = { username: session.username, isAdmin: !!u.isAdmin };
+      } else {
+        localStorage.removeItem('buzzquizAuth');
+      }
+    } catch (_) { localStorage.removeItem('buzzquizAuth'); }
+  }
+  updateAuthUI();
+}
+
+function updateAuthUI() {
+  const loggedIn = !!currentUser;
+  const isAdmin = loggedIn && currentUser.isAdmin;
+  $('user-bar').style.display = loggedIn ? '' : 'none';
+  $('menu-playlists').style.display = isAdmin ? '' : 'none';
+  $('menu-login').style.display = loggedIn ? 'none' : '';
+  if (loggedIn) {
+    $('user-bar-name').textContent = currentUser.username;
+    $('user-bar-role').textContent = isAdmin ? '👑 Admin' : 'Utilisateur';
+    $('account-username').textContent = currentUser.username;
+    $('account-admin-section').style.display = isAdmin ? '' : 'none';
+  }
+}
+
+function doLogout() {
+  currentUser = null;
+  localStorage.removeItem('buzzquizAuth');
+  updateAuthUI();
+  showScreen('menu');
+  toast('Déconnecté');
+}
+
+$('menu-logout').addEventListener('click', doLogout);
+$('account-logout-btn').addEventListener('click', doLogout);
+
+$('menu-login').addEventListener('click', async () => {
+  if (!db) return toast('Service pas encore prêt');
+  const snap = await get(ref(db, 'appUsers'));
+  showScreen(!snap.exists() ? 'setup' : 'login');
+});
+
+$('menu-account').addEventListener('click', () => {
+  if (!currentUser) return;
+  showScreen('account');
+  if (currentUser.isAdmin) loadUsersList();
+});
+
+$('menu-playlists').addEventListener('click', () => {
+  if (!currentUser?.isAdmin) return toast('Connecte-toi en admin d\'abord');
+  showScreen('playlists');
+  refreshPlaylistsScreen();
+});
+
+// SETUP
+$('setup-btn').addEventListener('click', async () => {
+  const username = ($('setup-username').value || '').trim();
+  const pass = $('setup-password').value;
+  const pass2 = $('setup-password2').value;
+  if (!username || username.length < 2) return toast('Pseudo trop court (2 min)');
+  if (!pass || pass.length < 4) return toast('Mot de passe trop court (4 min)');
+  if (pass !== pass2) return toast('Les mots de passe ne correspondent pas');
+  const safeKey = username.replace(/[.#$[\]/]/g, '_').toLowerCase();
+  try {
+    const hash = await hashPassword(pass);
+    await set(ref(db, 'appUsers/' + safeKey), {
+      username, passwordHash: hash, isAdmin: true, createdAt: serverTimestamp(),
+    });
+    currentUser = { username: safeKey, isAdmin: true };
+    localStorage.setItem('buzzquizAuth', JSON.stringify({ username: safeKey }));
+    toast('✅ Compte admin créé !');
+    updateAuthUI();
+    showScreen('menu');
+  } catch (e) { toast('Erreur : ' + e.message); }
+});
+
+// LOGIN
+$('login-btn').addEventListener('click', doLogin);
+$('login-password').addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
+async function doLogin() {
+  const username = ($('login-username').value || '').trim().toLowerCase();
+  const pass = $('login-password').value;
+  if (!username || !pass) return toast('Remplis tous les champs');
+  $('login-btn').disabled = true;
+  try {
+    const safeKey = username.replace(/[.#$[\]/]/g, '_');
+    const snap = await get(ref(db, 'appUsers/' + safeKey));
+    if (!snap.exists()) throw new Error('Compte introuvable');
+    const userData = snap.val();
+    const hash = await hashPassword(pass);
+    if (hash !== userData.passwordHash) throw new Error('Mot de passe incorrect');
+    currentUser = { username: safeKey, isAdmin: !!userData.isAdmin };
+    localStorage.setItem('buzzquizAuth', JSON.stringify({ username: safeKey }));
+    $('login-username').value = ''; $('login-password').value = '';
+    toast('Bienvenue ' + (userData.username || safeKey) + ' !');
+    updateAuthUI();
+    showScreen('menu');
+  } catch (e) { toast(e.message); }
+  finally { $('login-btn').disabled = false; }
+}
+
+// MON COMPTE — changer mot de passe
+$('account-change-pass').addEventListener('click', async () => {
+  const oldPass = $('account-old-pass').value;
+  const newPass = $('account-new-pass').value;
+  if (!oldPass || !newPass) return toast('Remplis les deux champs');
+  if (newPass.length < 4) return toast('Nouveau mot de passe trop court');
+  try {
+    const snap = await get(ref(db, 'appUsers/' + currentUser.username));
+    if (!snap.exists()) throw new Error('Compte introuvable');
+    if (await hashPassword(oldPass) !== snap.val().passwordHash) throw new Error('Mot de passe actuel incorrect');
+    await update(ref(db, 'appUsers/' + currentUser.username), { passwordHash: await hashPassword(newPass) });
+    $('account-old-pass').value = ''; $('account-new-pass').value = '';
+    toast('✅ Mot de passe changé');
+  } catch (e) { toast(e.message); }
+});
+
+// ADMIN — liste utilisateurs
+async function loadUsersList() {
+  if (!currentUser?.isAdmin) return;
+  const snap = await get(ref(db, 'appUsers'));
+  const wrap = $('account-users-list');
+  if (!snap.exists()) { wrap.innerHTML = '<p class="muted">Aucun utilisateur.</p>'; return; }
+  wrap.innerHTML = Object.entries(snap.val()).map(([key, u]) => {
+    const isMe = key === currentUser.username;
+    return `<div class="player-row" style="margin-bottom:6px;">
+      <span style="font-size:18px;">${u.isAdmin ? '👑' : '👤'}</span>
+      <span class="p-name">${escapeHtml(u.username || key)}</span>
+      ${u.isAdmin ? '<span style="font-size:11px;color:var(--accent-2);">Admin</span>' : ''}
+      ${!isMe ? `<button class="p-kick" data-del-user="${key}">✕</button>` : ''}
+    </div>`;
+  }).join('');
+  wrap.querySelectorAll('[data-del-user]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Supprimer "' + btn.dataset.delUser + '" ?')) return;
+      await remove(ref(db, 'appUsers/' + btn.dataset.delUser)).catch(() => {});
+      loadUsersList(); toast('Compte supprimé');
+    });
+  });
+}
+
+// ADMIN — créer un compte
+$('admin-new-isadmin').addEventListener('click', () => $('admin-new-isadmin').classList.toggle('on'));
+$('admin-create-user-btn').addEventListener('click', async () => {
+  if (!currentUser?.isAdmin) return;
+  const username = ($('admin-new-username').value || '').trim();
+  const pass = $('admin-new-password').value;
+  const isAdminNew = $('admin-new-isadmin').classList.contains('on');
+  if (!username || username.length < 2) return toast('Pseudo trop court');
+  if (!pass || pass.length < 4) return toast('Mot de passe trop court');
+  const safeKey = username.replace(/[.#$[\]/]/g, '_').toLowerCase();
+  try {
+    const existing = await get(ref(db, 'appUsers/' + safeKey));
+    if (existing.exists()) throw new Error('Ce nom est déjà pris');
+    const hash = await hashPassword(pass);
+    await set(ref(db, 'appUsers/' + safeKey), {
+      username, passwordHash: hash, isAdmin: isAdminNew, createdAt: serverTimestamp(),
+    });
+    $('admin-new-username').value = ''; $('admin-new-password').value = '';
+    $('admin-new-isadmin').classList.remove('on');
+    toast('✅ Compte créé : ' + username); loadUsersList();
+  } catch (e) { toast(e.message); }
+});
 
 // Helpers de rôle
 // L'hôte qui joue aussi (role='host_player') doit agir comme un joueur dans la plupart des cas
@@ -1752,6 +2040,8 @@ function initFirebase() {
     });
     State.ready = true;
     $('menu-status').textContent = 'Service prêt.';
+    // Restaure la session utilisateur
+    initAuth();
 
     // Si l'URL contient ?join=XXXX, on pré-remplit et on va sur join
     const params = new URLSearchParams(location.search);
@@ -1803,88 +2093,76 @@ function analyzePlaylist(data) {
 }
 
 // ============================================================
-//  PLAYLISTS LOCALES (stockées dans localStorage)
+//  PLAYLISTS FIREBASE
+//  Stockées dans Firebase à playlists/{id} — lisibles par tous,
+//  éditables uniquement par les admins (contrôle côté UI uniquement).
 // ============================================================
-const LOCAL_PLAYLISTS_KEY = 'buzzquiz.playlists.v1';
 
-function loadLocalPlaylists() {
-  try {
-    const raw = localStorage.getItem(LOCAL_PLAYLISTS_KEY);
-    if (!raw) return [];
-    const arr = JSON.parse(raw);
-    return Array.isArray(arr) ? arr : [];
-  } catch (_) { return []; }
-}
+// Cache en mémoire des playlists Firebase pour l'éditeur
+let _firebasePlaylistsCache = {};
 
-function saveLocalPlaylists(arr) {
+// Charger toutes les playlists depuis Firebase
+async function loadFirebasePlaylists() {
   try {
-    localStorage.setItem(LOCAL_PLAYLISTS_KEY, JSON.stringify(arr));
-    return true;
+    const snap = await get(ref(db, 'playlists'));
+    _firebasePlaylistsCache = snap.exists() ? snap.val() : {};
+    return _firebasePlaylistsCache;
   } catch (e) {
-    toast("Impossible d'enregistrer : " + e.message);
-    return false;
+    console.error('[playlists]', e);
+    return {};
   }
 }
 
-function makeLocalPlaylistId() {
-  return 'local_' + Date.now() + '_' + Math.floor(Math.random() * 9999);
+// Renvoie une playlist par id depuis le cache
+function getFirebasePlaylist(id) {
+  return _firebasePlaylistsCache[id] || null;
 }
 
-// Renvoie une playlist locale par id (ou null)
-function getLocalPlaylist(id) {
-  return loadLocalPlaylists().find((p) => p.id === id) || null;
-}
-
-// Sauvegarde (création ou mise à jour) d'une playlist locale
-function upsertLocalPlaylist(playlist) {
-  const all = loadLocalPlaylists();
-  const idx = all.findIndex((p) => p.id === playlist.id);
-  if (idx === -1) all.push(playlist);
-  else all[idx] = playlist;
-  return saveLocalPlaylists(all);
-}
-
-function deleteLocalPlaylist(id) {
-  const all = loadLocalPlaylists().filter((p) => p.id !== id);
-  return saveLocalPlaylists(all);
-}
-
-// ============================================================
-//  LISTAGE COMPLET (serveur + local)
-// ============================================================
-async function listPlaylists() {
-  const items = [];
-
-  // 1) Playlists du serveur (non modifiables)
-  try {
-    const res = await fetch('./playlists/index.json?_=' + Date.now());
-    if (res.ok) {
-      const data = await res.json();
-      for (const file of data.playlists || []) {
-        try {
-          const p = await fetch('./playlists/' + file + '?_=' + Date.now()).then(r => r.json());
-          const info = analyzePlaylist(p);
-          if (!info.ok) continue;
-          items.push({
-            source: 'server', file, id: 'server_' + file, raw: p,
-            ...info,
-          });
-        } catch (_) {}
-      }
-    }
-  } catch (_) { /* pas de playlists serveur, c'est OK */ }
-
-  // 2) Playlists locales (modifiables)
-  const locals = loadLocalPlaylists();
-  for (const p of locals) {
-    const info = analyzePlaylist(p);
-    if (!info.ok) continue;
-    items.push({
-      source: 'local', id: p.id, raw: p,
-      ...info,
+// Sauvegarder (création ou màj) une playlist dans Firebase
+async function upsertFirebasePlaylist(playlist) {
+  if (!currentUser?.isAdmin) throw new Error('Non autorisé');
+  const id = playlist.id || ref(ref(db, 'playlists')).key; // génère un id
+  if (!playlist.id) {
+    // Nouvelle playlist : utiliser push() pour un id auto
+    const newRef = await push(ref(db, 'playlists'), {
+      name: playlist.name,
+      description: playlist.description || '',
+      questions: playlist.questions,
+      createdAt: serverTimestamp(),
+      createdBy: currentUser.username,
     });
+    _firebasePlaylistsCache[newRef.key] = { ...playlist, id: newRef.key };
+    return newRef.key;
+  } else {
+    // Mise à jour existante
+    await update(ref(db, 'playlists/' + playlist.id), {
+      name: playlist.name,
+      description: playlist.description || '',
+      questions: playlist.questions,
+      updatedAt: serverTimestamp(),
+    });
+    _firebasePlaylistsCache[playlist.id] = { ...playlist };
+    return playlist.id;
   }
+}
 
+// Supprimer une playlist de Firebase
+async function deleteFirebasePlaylist(id) {
+  if (!currentUser?.isAdmin) throw new Error('Non autorisé');
+  await remove(ref(db, 'playlists/' + id));
+  delete _firebasePlaylistsCache[id];
+}
+
+// Lister toutes les playlists (Firebase seulement)
+async function listPlaylists() {
+  const playlists = await loadFirebasePlaylists();
+  const items = [];
+  for (const [id, p] of Object.entries(playlists)) {
+    const raw = { ...p, id };
+    const info = analyzePlaylist(raw);
+    if (!info.ok) continue;
+    items.push({ source: 'firebase', id, raw, ...info });
+  }
   return items;
 }
 
@@ -1914,15 +2192,11 @@ function loadPlaylistForMode(data, mode) {
 // ============================================================
 $('menu-create').addEventListener('click', () => {
   if (!State.ready) return toast('Service pas encore prêt');
-  startCreate('buzzer');   // par défaut buzzer
+  startCreate('buzzer');
 });
 $('menu-join').addEventListener('click', () => {
   if (!State.ready) return toast('Service pas encore prêt');
   showScreen('join-choice');
-});
-$('menu-playlists').addEventListener('click', () => {
-  showScreen('playlists');
-  refreshPlaylistsScreen();
 });
 
 // Sous-menu rejoindre
@@ -2556,13 +2830,10 @@ function startCountdownAnimation() {
 async function startPlayingPhase() {
   await update(ref(db, 'rooms/' + State.roomCode), { phase: 'playing' });
   if (State.mode === 'qcm') {
-    // Lance la boucle QCM
     await startQcmLoop();
-  } else {
-    // Buzzer : on attend que le contrôleur appuie sur "Question suivante"
-    // Mais d'abord pioche la première question automatiquement
-    await nextQuestion();
   }
+  // Buzzer : pas d'auto-start. Le contrôle distant démarre la première question
+  // via le bouton "Démarrer la 1ère question" (cmd 'next').
 }
 
 // ============================================================
@@ -3035,16 +3306,11 @@ function handlePhaseTransition(data) {
     if (State.role === 'projection' && !$('screen-projection').classList.contains('active')) {
       showScreen('projection');
     }
-    // L'hôte-joueur va sur l'écran joueur, ET il lance la boucle QCM en arrière-plan
+    // L'hôte-joueur va sur l'écran joueur
+    // La boucle QCM est lancée par startPlayingPhase (via le countdown), pas ici.
     if (State.role === 'host_player') {
       if (!$('screen-player').classList.contains('active')) {
         showScreen('player');
-      }
-      if (State.mode === 'qcm' && !State.qcmLoop.running) {
-        startQcmLoop();
-      } else if (State.mode === 'buzzer') {
-        // En buzzer, on déclenche aussi la 1ère question via nextQuestion()
-        // (idem qu'en mode projection — voir startPlayingPhase)
       }
     }
     if (State.role === 'control' && !$('screen-control').classList.contains('active')) {
@@ -3741,110 +4007,65 @@ const PlaylistEditor = {
 };
 
 async function refreshPlaylistsScreen() {
-  // Liste locale
-  const locals = loadLocalPlaylists();
+  if (!currentUser?.isAdmin) { toast('Accès réservé aux admins'); return; }
   const localList = $('pls-local-list');
-  if (!locals.length) {
-    localList.innerHTML = '<p class="muted">Aucune playlist personnelle. Crée-en une avec le bouton ci-dessus ou importe un .json.</p>';
-  } else {
-    localList.innerHTML = locals.map((p) => {
-      const info = analyzePlaylist(p);
-      const compat = [];
-      if (info.ok) {
-        if (info.buzzerOk) compat.push('Buzzer');
-        if (info.qcmOk) compat.push('QCM');
-      }
-      return `<div class="playlist-item" data-local-id="${p.id}">
-        <div class="pl-name">${escapeHtml(p.name || 'Sans nom')}</div>
-        <div class="pl-meta">
-          <span class="pl-badge">${info.ok ? info.count : 0} questions</span>
-          ${compat.length ? '<span style="color:var(--mint); font-size:12px;">✓ ' + compat.join(' & ') + '</span>' : '<span style="color:var(--accent); font-size:12px;">⚠ Incomplète</span>'}
-          ${p.description ? '<div style="margin-top:4px;">' + escapeHtml(p.description) + '</div>' : ''}
-        </div>
-        <div class="pls-item-actions">
-          <button data-action="edit" data-id="${p.id}">✏ Modifier</button>
-          <button data-action="export" data-id="${p.id}">📥 Exporter</button>
-          <button data-action="duplicate" data-id="${p.id}">📋 Dupliquer</button>
-          <button data-action="delete" data-id="${p.id}" class="danger">🗑 Supprimer</button>
-        </div>
-      </div>`;
-    }).join('');
-    // Handlers d'actions
-    localList.querySelectorAll('button[data-action]').forEach((btn) => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const action = btn.dataset.action;
-        const id = btn.dataset.id;
-        if (action === 'edit') openPlaylistEditor(id);
-        else if (action === 'delete') deletePlaylistConfirm(id);
-        else if (action === 'export') exportPlaylist(id);
-        else if (action === 'duplicate') duplicatePlaylist(id);
-      });
-    });
+  const serverList = $('pls-server-list');
+  localList.innerHTML = '<div class="spinner"></div>';
+  serverList.style.display = 'none';
+  document.querySelector('#screen-playlists .section-title:last-of-type')?.remove();
+
+  const playlists = await loadFirebasePlaylists();
+  const entries = Object.entries(playlists);
+
+  if (!entries.length) {
+    localList.innerHTML = '<p class="muted">Aucune playlist. Crée-en une ou importe un .json.</p>';
+    return;
   }
 
-  // Liste serveur (non modifiable)
-  try {
-    const res = await fetch('./playlists/index.json?_=' + Date.now());
-    const data = await res.json();
-    const serverList = $('pls-server-list');
-    const items = [];
-    for (const file of data.playlists || []) {
-      try {
-        const p = await fetch('./playlists/' + file + '?_=' + Date.now()).then(r => r.json());
-        const info = analyzePlaylist(p);
-        if (info.ok) items.push({ p, info, file });
-      } catch (_) {}
+  localList.innerHTML = entries.map(([id, p]) => {
+    const raw = { ...p, id };
+    const info = analyzePlaylist(raw);
+    const compat = [];
+    if (info.ok) {
+      if (info.buzzerOk) compat.push('Buzzer');
+      if (info.qcmOk) compat.push('QCM');
     }
-    if (!items.length) {
-      serverList.innerHTML = '<p class="muted">Aucune playlist d\'exemple.</p>';
-    } else {
-      serverList.innerHTML = items.map(({ p, info, file }) => {
-        const compat = [];
-        if (info.buzzerOk) compat.push('Buzzer');
-        if (info.qcmOk) compat.push('QCM');
-        return `<div class="playlist-item">
-          <div class="pl-name">${escapeHtml(p.name || file)}</div>
-          <div class="pl-meta">
-            <span class="pl-badge">${info.count} questions</span>
-            ${compat.length ? '<span style="color:var(--mint); font-size:12px;">✓ ' + compat.join(' & ') + '</span>' : ''}
-            ${p.description ? '<div style="margin-top:4px;">' + escapeHtml(p.description) + '</div>' : ''}
-          </div>
-          <div class="pls-item-actions">
-            <button data-action="copy-server" data-file="${file}">📋 Copier dans mes playlists</button>
-          </div>
-        </div>`;
-      }).join('');
-      serverList.querySelectorAll('button[data-action="copy-server"]').forEach((btn) => {
-        btn.addEventListener('click', async () => {
-          const file = btn.dataset.file;
-          try {
-            const data = await fetch('./playlists/' + file + '?_=' + Date.now()).then(r => r.json());
-            const newP = {
-              ...data,
-              id: makeLocalPlaylistId(),
-              name: (data.name || 'Playlist') + ' (copie)',
-            };
-            upsertLocalPlaylist(newP);
-            toast('Playlist copiée dans tes playlists');
-            refreshPlaylistsScreen();
-          } catch (e) {
-            toast("Erreur : " + e.message);
-          }
-        });
-      });
-    }
-  } catch (_) {
-    $('pls-server-list').innerHTML = '<p class="muted">Pas de playlists d\'exemple.</p>';
-  }
+    return `<div class="playlist-item" data-id="${id}">
+      <div class="pl-name">${escapeHtml(p.name || 'Sans nom')}</div>
+      <div class="pl-meta">
+        <span class="pl-badge">${info.ok ? info.count : 0} questions</span>
+        ${compat.length ? '<span style="color:var(--mint); font-size:12px;">✓ ' + compat.join(' & ') + '</span>' : '<span style="color:var(--accent); font-size:12px;">⚠ Incomplète</span>'}
+        ${p.description ? '<div style="margin-top:4px;">' + escapeHtml(p.description) + '</div>' : ''}
+        ${p.createdBy ? '<div style="font-size:11px; color:var(--ink-dim); margin-top:2px;">Par ' + escapeHtml(p.createdBy) + '</div>' : ''}
+      </div>
+      <div class="pls-item-actions">
+        <button data-action="edit" data-id="${id}">✏ Modifier</button>
+        <button data-action="export" data-id="${id}">📥 Exporter</button>
+        <button data-action="duplicate" data-id="${id}">📋 Dupliquer</button>
+        <button data-action="delete" data-id="${id}" class="danger">🗑 Supprimer</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  localList.querySelectorAll('button[data-action]').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const { action, id } = btn.dataset;
+      if (action === 'edit') openPlaylistEditor(id);
+      else if (action === 'delete') deletePlaylistConfirm(id);
+      else if (action === 'export') exportPlaylist(id);
+      else if (action === 'duplicate') duplicatePlaylist(id);
+    });
+  });
 }
 
 // Nouvelle playlist
 $('pls-new').addEventListener('click', () => {
-  openPlaylistEditor(null);  // null = nouvelle
+  if (!currentUser?.isAdmin) return toast('Accès admin requis');
+  openPlaylistEditor(null);
 });
 
-// Import
+// Import JSON → Firebase
 $('pls-import').addEventListener('click', () => $('pls-import-file').click());
 $('pls-import-file').addEventListener('change', async (ev) => {
   const file = ev.target.files[0];
@@ -3854,11 +4075,13 @@ $('pls-import-file').addEventListener('change', async (ev) => {
     const data = JSON.parse(text);
     const info = analyzePlaylist(data);
     if (!info.ok) throw new Error(info.reason || 'Playlist invalide');
-    const newP = {
-      ...data,
-      id: makeLocalPlaylistId(),
-    };
-    upsertLocalPlaylist(newP);
+    // On retire l'id si présent (Firebase en génère un nouveau)
+    const { id: _id, ...cleanData } = data;
+    await push(ref(db, 'playlists'), {
+      ...cleanData,
+      createdAt: serverTimestamp(),
+      createdBy: currentUser.username,
+    });
     toast('Playlist importée : ' + (data.name || 'Sans nom'));
     refreshPlaylistsScreen();
   } catch (e) {
@@ -3867,10 +4090,10 @@ $('pls-import-file').addEventListener('change', async (ev) => {
   ev.target.value = '';
 });
 
-// Ouvrir l'éditeur (id=null → nouvelle ; sinon édite)
+// Ouvrir l'éditeur
 function openPlaylistEditor(id) {
   if (id) {
-    const p = getLocalPlaylist(id);
+    const p = getFirebasePlaylist(id);
     if (!p) { toast("Playlist introuvable"); return; }
     PlaylistEditor.id = id;
     PlaylistEditor.isNew = false;
@@ -3886,7 +4109,7 @@ function openPlaylistEditor(id) {
     $('ple-description').value = p.description || '';
     $('ple-delete').style.display = '';
   } else {
-    PlaylistEditor.id = makeLocalPlaylistId();
+    PlaylistEditor.id = null;  // sera généré par Firebase push()
     PlaylistEditor.isNew = true;
     PlaylistEditor.questions = [];
     $('ple-title').textContent = 'Nouvelle playlist';
@@ -3932,7 +4155,6 @@ function renderEditorQuestions() {
     </div>
   `).join('');
 
-  // Handlers (event delegation serait mieux, mais ici on attache à chaque card)
   wrap.querySelectorAll('.ple-q-card').forEach((card) => {
     const idx = parseInt(card.dataset.idx, 10);
     card.querySelector('.ple-q-text').addEventListener('input', (e) => {
@@ -3943,8 +4165,7 @@ function renderEditorQuestions() {
     });
     card.querySelectorAll('.ple-q-choice').forEach((input) => {
       input.addEventListener('input', (e) => {
-        const ci = parseInt(input.dataset.c, 10);
-        PlaylistEditor.questions[idx].choices[ci] = e.target.value;
+        PlaylistEditor.questions[idx].choices[parseInt(input.dataset.c, 10)] = e.target.value;
       });
     });
     card.querySelectorAll('.ple-correct-btn').forEach((btn) => {
@@ -3961,16 +4182,14 @@ function renderEditorQuestions() {
     });
     card.querySelector('.ple-q-up').addEventListener('click', () => {
       if (idx === 0) return;
-      const tmp = PlaylistEditor.questions[idx - 1];
-      PlaylistEditor.questions[idx - 1] = PlaylistEditor.questions[idx];
-      PlaylistEditor.questions[idx] = tmp;
+      [PlaylistEditor.questions[idx - 1], PlaylistEditor.questions[idx]] =
+        [PlaylistEditor.questions[idx], PlaylistEditor.questions[idx - 1]];
       renderEditorQuestions();
     });
     card.querySelector('.ple-q-down').addEventListener('click', () => {
       if (idx === PlaylistEditor.questions.length - 1) return;
-      const tmp = PlaylistEditor.questions[idx + 1];
-      PlaylistEditor.questions[idx + 1] = PlaylistEditor.questions[idx];
-      PlaylistEditor.questions[idx] = tmp;
+      [PlaylistEditor.questions[idx + 1], PlaylistEditor.questions[idx]] =
+        [PlaylistEditor.questions[idx], PlaylistEditor.questions[idx + 1]];
       renderEditorQuestions();
     });
   });
@@ -3978,23 +4197,20 @@ function renderEditorQuestions() {
 
 // Ajouter une question
 $('ple-add-q').addEventListener('click', () => {
-  PlaylistEditor.questions.push({
-    q: '', a: '', choices: ['', '', '', ''], correct: 0,
-  });
+  PlaylistEditor.questions.push({ q: '', a: '', choices: ['', '', '', ''], correct: 0 });
   renderEditorQuestions();
-  // Scroll en bas
   setTimeout(() => {
     $('ple-questions').lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, 50);
 });
 
-// Enregistrer
-$('ple-save').addEventListener('click', () => {
+// Enregistrer → Firebase
+$('ple-save').addEventListener('click', async () => {
+  if (!currentUser?.isAdmin) return toast('Accès admin requis');
   const name = $('ple-name').value.trim();
   if (!name) return toast('Donne un nom à la playlist');
   if (!PlaylistEditor.questions.length) return toast('Ajoute au moins une question');
 
-  // Nettoyer les questions vides
   const cleaned = PlaylistEditor.questions
     .filter((q) => q.q && q.q.trim())
     .map((q) => ({
@@ -4003,24 +4219,31 @@ $('ple-save').addEventListener('click', () => {
       choices: q.choices.map((c) => (c || '').trim()),
       correct: q.correct,
     }));
-
   if (!cleaned.length) return toast('Ajoute au moins une question avec un énoncé');
 
-  const playlist = {
-    id: PlaylistEditor.id,
-    name,
-    description: $('ple-description').value.trim(),
-    questions: cleaned,
-  };
-
-  if (upsertLocalPlaylist(playlist)) {
-    toast('✓ Playlist enregistrée');
+  const btn = $('ple-save');
+  btn.disabled = true;
+  btn.textContent = '⏳ Enregistrement…';
+  try {
+    const playlist = {
+      id: PlaylistEditor.id,
+      name,
+      description: $('ple-description').value.trim(),
+      questions: cleaned,
+    };
+    await upsertFirebasePlaylist(playlist);
+    toast('✅ Playlist enregistrée !');
     showScreen('playlists');
     refreshPlaylistsScreen();
+  } catch (e) {
+    toast('Erreur : ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '💾 Enregistrer';
   }
 });
 
-// Bouton retour de l'éditeur
+// Retour éditeur
 $('ple-back').addEventListener('click', () => {
   if (confirm('Quitter sans enregistrer ?\nLes modifications seront perdues.')) {
     showScreen('playlists');
@@ -4037,38 +4260,39 @@ $('ple-delete').addEventListener('click', () => {
 });
 
 // Suppression avec confirmation
-function deletePlaylistConfirm(id, onDone) {
-  const p = getLocalPlaylist(id);
-  if (!p) return;
+async function deletePlaylistConfirm(id, onDone) {
+  const p = getFirebasePlaylist(id);
+  if (!p) { toast('Playlist introuvable'); return; }
   if (!confirm('Supprimer définitivement "' + (p.name || 'Sans nom') + '" ?')) return;
-  if (deleteLocalPlaylist(id)) {
+  try {
+    await deleteFirebasePlaylist(id);
     toast('Playlist supprimée');
     if (onDone) onDone();
     else refreshPlaylistsScreen();
-  }
+  } catch (e) { toast('Erreur : ' + e.message); }
 }
 
 // Dupliquer
-function duplicatePlaylist(id) {
-  const p = getLocalPlaylist(id);
+async function duplicatePlaylist(id) {
+  const p = getFirebasePlaylist(id);
   if (!p) return;
-  const copy = {
-    ...p,
-    id: makeLocalPlaylistId(),
-    name: (p.name || 'Playlist') + ' (copie)',
-  };
-  if (upsertLocalPlaylist(copy)) {
+  const { id: _id, createdAt, ...cleanP } = p;
+  try {
+    await upsertFirebasePlaylist({
+      ...cleanP,
+      id: null,  // nouveau
+      name: (p.name || 'Playlist') + ' (copie)',
+    });
     toast('Playlist dupliquée');
     refreshPlaylistsScreen();
-  }
+  } catch (e) { toast('Erreur : ' + e.message); }
 }
 
-// Exporter en .json
+// Exporter en .json (téléchargement)
 function exportPlaylist(id) {
-  const p = getLocalPlaylist(id);
+  const p = getFirebasePlaylist(id);
   if (!p) return;
-  const exported = { ...p };
-  delete exported.id;   // pas besoin d'exporter l'id local
+  const { id: _id, createdAt, updatedAt, createdBy, ...exported } = p;
   const blob = new Blob([JSON.stringify(exported, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
