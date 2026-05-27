@@ -2261,11 +2261,17 @@ function updateAuthUI() {
   }
   // Sync fab (la fonction peut ne pas encore exister au premier appel)
   if (typeof updateFabMenu === 'function') updateFabMenu();
+  // Démarrer la musique si connecté, l'arrêter sinon
+  if (typeof playTrack === 'function') {
+    if (currentUser) playTrack('menu');
+    else stopMusic();
+  }
 }
 
 function doLogout() {
   currentUser = null;
   localStorage.removeItem('buzzquizAuth');
+  stopMusic();
   updateAuthUI();
   showScreen('menu');
   toast('Déconnecté');
@@ -2641,11 +2647,12 @@ const FADE_DELAY  = 25;         // ms entre chaque step → fade de 500ms
 
 const bgAudio = document.getElementById('bg-audio');
 
+let _pendingTrack = null;
+
 // iOS : débloquer l'audio au premier geste utilisateur
 function unlockAudioIfNeeded() {
   if (audioUnlocked) return;
   audioUnlocked = true;
-  // Jouer 100ms de silence pour déverrouiller l'AudioContext iOS
   const sampleRate = 22050;
   const numSamples = Math.floor(sampleRate * 0.1);
   const dataSize   = numSamples * 2;
@@ -2663,9 +2670,12 @@ function unlockAudioIfNeeded() {
   tmp.play().then(() => {
     tmp.pause();
     URL.revokeObjectURL(url);
-    // Relancer la piste en cours si elle était bloquée
-    if (currentTrack && bgAudio.paused) {
-      bgAudio.play().catch(() => {});
+    // Relancer la piste en attente (bloquée avant le premier clic)
+    const toPlay = _pendingTrack || currentTrack;
+    if (toPlay) {
+      _pendingTrack = null;
+      currentTrack = null;  // forcer la relance dans playTrack
+      playTrack(toPlay);
     }
   }).catch(() => {});
 }
@@ -2716,6 +2726,8 @@ function fadeIn() {
 
 // Fonction principale : switcher vers une piste
 function playTrack(trackKey) {
+  // Musique réservée aux utilisateurs connectés (comme le blind test)
+  if (!currentUser) return;
   if (!trackKey || currentTrack === trackKey) return;
   const src = MUSIC_TRACKS[trackKey];
   if (!src) return;
@@ -2729,7 +2741,10 @@ function playTrack(trackKey) {
     bgAudio.play().then(() => {
       fadeIn();
     }).catch(() => {
-      // iOS bloqué — on garde la piste en mémoire, elle se lancera à unlockAudio
+      // Navigateur bloqué (pas d'interaction utilisateur encore)
+      // On marque la piste comme "en attente" pour la relancer au premier clic
+      currentTrack = null;  // reset pour permettre la relance
+      _pendingTrack = trackKey;
     });
   };
 
