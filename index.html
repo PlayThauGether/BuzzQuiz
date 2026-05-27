@@ -4108,7 +4108,7 @@ async function nextQuestion() {
   // Arrêter le timer buzzer + reset son buzzer
   stopBuzzerTimer();
   resetBuzzSound();
-  resumeMusicAfterBuzz(); // au cas où la musique était encore en pause
+  resumeMusicAfterBuzz();
 
   const remaining = State.playlist.questions
     .map((_, i) => i)
@@ -4124,6 +4124,20 @@ async function nextQuestion() {
   State.currentQuestionIndex = idx;
   const q = State.playlist.questions[idx];
 
+  // ⚠ Vider les buzzes/réponses EN PREMIER pour éviter que detectDynEvents
+  // voit un "vieux buzz" quand le nouveau round est armé
+  await Promise.all([
+    remove(ref(db, 'rooms/' + State.roomCode + '/buzzes')).catch(() => {}),
+    remove(ref(db, 'rooms/' + State.roomCode + '/answers')).catch(() => {}),
+    remove(ref(db, 'rooms/' + State.roomCode + '/wrongBuzzes')).catch(() => {}),
+  ]);
+
+  // Nettoyer le log au début de la partie (première question)
+  if (State.usedIndexes.size === 1) {
+    await remove(ref(db, 'rooms/' + State.roomCode + '/log')).catch(() => {});
+  }
+
+  // PUIS armer le nouveau round
   await set(ref(db, 'rooms/' + State.roomCode + '/round'), {
     status: 'armed',
     question: q.q,
@@ -4133,21 +4147,12 @@ async function nextQuestion() {
     number: State.usedIndexes.size,
     openedAt: serverTimestamp(),
   });
-  await remove(ref(db, 'rooms/' + State.roomCode + '/buzzes')).catch(() => {});
-  await remove(ref(db, 'rooms/' + State.roomCode + '/answers')).catch(() => {});
-  await remove(ref(db, 'rooms/' + State.roomCode + '/wrongBuzzes')).catch(() => {});
-  // Nettoyer le log au début de la partie (première question)
-  if (State.usedIndexes.size === 1) {
-    await remove(ref(db, 'rooms/' + State.roomCode + '/log')).catch(() => {});
-  }
 
   const privateView = State.mode === 'qcm'
     ? { answer: q.choices[q.correct], correctIndex: q.correct, question: q.q }
     : { answer: q.a || '', question: q.q };
   await set(ref(db, 'private_views/' + State.roomCode), privateView).catch(() => {});
 
-  // Lecture vocale de la question (si activée)
-  // Petit délai pour laisser le temps à l'UI de se mettre à jour
   if (State.ttsEnabled && q.q) {
     setTimeout(() => speakText(q.q), 600);
   }
