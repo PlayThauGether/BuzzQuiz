@@ -689,6 +689,39 @@ input.code-input {
 
 /* Classement / scoreboard */
 .score-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; max-height: 480px; overflow-y: auto; }
+
+/* Stats podium */
+.stats-title {
+  font-family: 'Outfit'; font-weight: 700; font-size: 12px;
+  color: var(--ink-dim); letter-spacing: 2px; text-transform: uppercase;
+  text-align: center; margin: 10px 0 14px;
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px; padding: 0 4px;
+}
+.stat-card {
+  background: var(--bg-soft); border: 2px solid rgba(131,56,236,.3);
+  border-radius: 16px; padding: 14px 12px; text-align: center;
+}
+.stat-card .stat-emoji { font-size: 28px; margin-bottom: 4px; }
+.stat-card .stat-title {
+  font-family: 'Outfit'; font-weight: 800; font-size: 11px;
+  color: var(--mint); letter-spacing: 1.5px; text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.stat-card .stat-desc {
+  color: var(--ink-dim); font-size: 10px; font-style: italic;
+  margin-bottom: 6px; line-height: 1.3;
+}
+.stat-card .stat-player {
+  font-family: 'Fraunces'; font-weight: 900;
+  font-size: 15px; color: var(--accent-2);
+}
+.stat-card .stat-value {
+  font-size: 11px; color: var(--ink-dim); margin-top: 3px;
+}
 .score-row {
   display: flex; align-items: center; gap: 12px;
   background: var(--bg-soft); border: 1px solid var(--line);
@@ -718,15 +751,27 @@ input.code-input {
    ============================================================ */
 #screen-player .player-wrap { display: flex; flex-direction: column; min-height: 100dvh; }
 
+/* Topbar joueur : espace pour les boutons fixes (plein écran + menu) */
 .player-head {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 12px; gap: 10px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: calc(50px + env(safe-area-inset-top, 0px)) 12px 10px;
+  gap: 8px;
 }
+.player-head .player-info:first-child { justify-self: start; }
+.player-head .player-info:last-child { justify-self: end; }
+.player-head-title {
+  font-family: 'Fraunces'; font-weight: 900; font-size: 14px;
+  text-align: center; color: var(--ink-dim); letter-spacing: .3px;
+  justify-self: center;
+}
+.player-head-title span { color: var(--accent); }
 .player-info {
-  display: inline;
+  display: inline-flex; align-items: center; gap: 5px;
   font-size: 14px; color: var(--ink-dim);
 }
-.player-info .me-emoji { font-size: 24px; }
+.player-info .me-emoji { font-size: 22px; }
 .player-info .me-score {
   font-family: 'Fraunces'; font-weight: 900; color: var(--accent-2);
   font-size: 18px;
@@ -818,17 +863,21 @@ input.code-input {
 }
 
 .qcm-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
-  padding: 12px; flex: 1;
+  display: grid; grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 12px; padding: 12px; flex: 1;
 }
 .qcm-btn {
   border: none; border-radius: 18px; color: #fff;
   font-family: 'Fraunces'; font-weight: 900;
-  font-size: clamp(17px, 4.5vw, 24px); cursor: pointer;
-  padding: 18px 14px; min-height: 130px;
+  font-size: clamp(16px, 4vw, 22px); cursor: pointer;
+  padding: 14px 12px;
+  /* Hauteur égale pour toutes les cellules */
+  height: 100%; min-height: 100px;
   display: flex; flex-direction: column; align-items: flex-start;
-  gap: 8px; transition: transform .08s ease, opacity .15s ease, outline .15s;
-  text-align: left;
+  justify-content: center;
+  gap: 6px; transition: transform .08s ease, opacity .15s ease, outline .15s;
+  text-align: left; word-break: break-word;
 }
 .qcm-btn .qcm-letter { font-size: clamp(22px, 5.5vw, 28px); opacity: .85; }
 .qcm-btn.c0 { background: var(--q1); color: #0a1840; }
@@ -874,36 +923,36 @@ input.code-input {
 
 /* Mini-classement joueur */
 .p-mini-rank {
-  margin: 14px 12px 4px;
+  margin: 10px 12px 60px; /* margin-bottom élevé pour ne pas être masqué par les réactions */
   background: var(--bg-soft); border: 1px solid var(--line);
-  border-radius: 14px; padding: 12px 14px;
+  border-radius: 14px; padding: 10px 12px;
 }
 .p-mini-rank-title {
-  font-family: 'Outfit'; font-weight: 700; font-size: 12px;
+  font-family: 'Outfit'; font-weight: 700; font-size: 11px;
   color: var(--ink-dim); letter-spacing: 1px; text-transform: uppercase;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 .p-mini-rank-row {
-  display: inline;
-  padding: 5px 0; font-size: 14px;
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 0; font-size: 13px;
 }
 .p-mini-rank-row.is-me {
   background: rgba(255,209,102,.10);
-  margin: 0 -8px; padding: 5px 8px; border-radius: 8px;
+  margin: 0 -6px; padding: 4px 6px; border-radius: 8px;
 }
 .p-mini-rank-row .mr-rank {
-  font-family: 'Fraunces'; font-weight: 900; font-size: 14px;
-  width: 22px; text-align: center;
+  font-family: 'Fraunces'; font-weight: 900; font-size: 13px;
+  width: 20px; text-align: center; flex: none;
   color: var(--ink-dim);
 }
 .p-mini-rank-row.rank-1 .mr-rank { color: var(--gold); }
 .p-mini-rank-row.rank-2 .mr-rank { color: var(--silver); }
 .p-mini-rank-row.rank-3 .mr-rank { color: var(--bronze); }
-.p-mini-rank-row .mr-emoji { font-size: 18px; }
-.p-mini-rank-row .mr-name { flex: 1; font-weight: 700; }
+.p-mini-rank-row .mr-emoji { font-size: 16px; flex: none; }
+.p-mini-rank-row .mr-name { flex: 1; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .p-mini-rank-row .mr-pts {
-  font-family: 'Fraunces'; font-weight: 900; font-size: 14px;
-  color: var(--accent-2); font-variant-numeric: tabular-nums;
+  font-family: 'Fraunces'; font-weight: 900; font-size: 13px;
+  color: var(--accent-2); font-variant-numeric: tabular-nums; flex: none;
 }
 
 .player-question-screen {
@@ -1424,6 +1473,16 @@ input.code-input {
         </div>
         <div class="toggle-switch" id="opt-teams-toggle"></div>
       </div>
+
+      <!-- Lecture vocale des questions -->
+      <div class="toggle-row" style="margin-top:14px;">
+        <div>
+          <div class="toggle-label">🔊 Lecture vocale des questions</div>
+          <div class="toggle-desc">La question est lue à voix haute au démarrage de chaque round</div>
+        </div>
+        <div class="toggle-switch" id="opt-tts-toggle"></div>
+      </div>
+      <p class="muted" id="tts-note" style="font-size:12px; margin-top:6px; display:none;"></p>
       <div id="teams-config" style="display:none; margin-top:14px;">
         <label>Nombre d'équipes</label>
         <div class="option-group" id="opt-nb-teams">
@@ -1717,6 +1776,7 @@ input.code-input {
         <span id="me-name">…</span>
         <span id="me-team-badge"></span>
       </div>
+      <div class="player-head-title">Buzz<span>Quiz</span></div>
       <div class="player-info">
         <span>Score</span>
         <span class="me-score" id="me-score">0</span>
@@ -1807,6 +1867,9 @@ input.code-input {
       <div class="section-title" style="margin-top:0;">Classement complet</div>
       <div class="score-list" id="podium-fullrank"></div>
     </div>
+
+    <!-- Stats de fin de partie -->
+    <div id="podium-stats-wrap" style="max-width:600px; margin:0 auto 20px;"></div>
 
     <div style="text-align:center; padding: 20px 0;">
       <!-- Boutons hôte -->
@@ -1976,6 +2039,9 @@ input.code-input {
 <div class="toast" id="toast"></div>
 <div class="dyn-msg" id="dyn-msg"></div>
 
+<!-- Audio — un seul élément actif à la fois pour éviter les chevauchements iOS -->
+<audio id="bg-audio" loop preload="none"></audio>
+
 <!-- Modale sélection emoji (partagée entre create et join) -->
 <div class="emoji-modal-overlay hidden" id="emoji-modal-overlay">
   <div class="emoji-modal">
@@ -1996,6 +2062,7 @@ input.code-input {
 <!-- Panneau menu contextuel -->
 <div class="fab-panel" id="fab-panel">
   <button class="fab-item" id="fab-home">🏠 Menu principal</button>
+  <button class="fab-item" id="fab-mute">🔊 Couper la musique</button>
   <div class="fab-separator"></div>
   <!-- Affiché si admin connecté -->
   <button class="fab-item" id="fab-playlists" style="display:none;">📚 Gérer les playlists</button>
@@ -2078,7 +2145,8 @@ const State = {
   // Côté projection
   playlist: null,
   selectedPlaylistData: null,
-  soireeSelectedIds: new Set(), // ids des playlists sélectionnées en mode soirée
+  soireeSelectedIds: new Set(),
+  ttsEnabled: false, // ids des playlists sélectionnées en mode soirée
   hostMode: true,   // true = écran d'affichage public ; false = l'hôte joue aussi
   isRestartMode: false,
   usedIndexes: new Set(),
@@ -2128,6 +2196,8 @@ function showScreen(name) {
   const stars = $('stars');
   if (stars) stars.style.display = (name === 'menu' || name === 'lobby' || name === 'player-lobby') ? '' : 'none';
   window.scrollTo(0, 0);
+  // Musique de fond selon l'écran
+  if (typeof updateMusicForScreen === 'function') updateMusicForScreen(name);
 }
 
 let toastTimer = null;
@@ -2486,6 +2556,304 @@ window.addEventListener('popstate', () => {
   history.pushState(null, '', location.href);
 });
 
+// ============================================================
+//  LECTURE VOCALE (Web Speech API)
+// ============================================================
+// Vérifie le support et affiche une note dans le formulaire
+(function checkTTS() {
+  const tog = $('opt-tts-toggle');
+  const note = $('tts-note');
+  if (!('speechSynthesis' in window)) {
+    tog.classList.add('disabled');
+    note.style.display = '';
+    note.textContent = '⚠ Ton navigateur ne supporte pas la synthèse vocale.';
+    return;
+  }
+  // Détecter les voix disponibles (elles chargent de façon asynchrone)
+  const showVoiceInfo = () => {
+    const voices = speechSynthesis.getVoices();
+    const fr = voices.find(v => v.lang.startsWith('fr'));
+    if (fr) {
+      note.style.display = '';
+      note.textContent = `ℹ Voix détectée : "${fr.name}" — Active le toggle pour lire les questions.`;
+    }
+  };
+  if (speechSynthesis.getVoices().length > 0) showVoiceInfo();
+  speechSynthesis.addEventListener('voiceschanged', showVoiceInfo, { once: true });
+})();
+
+$('opt-tts-toggle').addEventListener('click', () => {
+  const tog = $('opt-tts-toggle');
+  if (tog.classList.contains('disabled')) return;
+  tog.classList.toggle('on');
+});
+
+// Lire un texte à voix haute
+function speakText(text) {
+  if (!('speechSynthesis' in window)) return;
+  if (!State.ttsEnabled) return;
+  // Annule la lecture précédente si en cours
+  speechSynthesis.cancel();
+
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'fr-FR';
+  utter.rate = 0.92;   // légèrement plus lent que normal, plus clair
+  utter.pitch = 1.0;
+
+  // Priorité : voix française locale, sinon la première voix dispo
+  const voices = speechSynthesis.getVoices();
+  const frVoice = voices.find(v => v.lang === 'fr-FR' && v.localService)
+    || voices.find(v => v.lang.startsWith('fr'))
+    || null;
+  if (frVoice) utter.voice = frVoice;
+
+  speechSynthesis.speak(utter);
+}
+
+function stopSpeech() {
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+}
+
+// ============================================================
+//  SYSTÈME AUDIO — une piste à la fois, fade in/out
+//  Fichiers MP3 à placer à la racine du repo GitHub :
+//    music-menu.mp3    → musique du menu / lobby
+//    music-qcm.mp3     → musique pendant un QCM
+//    music-buzzer.mp3  → musique pendant un Buzzer
+//    music-podium.mp3  → musique du podium / fin de partie
+// ============================================================
+
+// Base URL vers les fichiers audio sur GitHub Pages
+const AUDIO_BASE = './';
+const MUSIC_TRACKS = {
+  menu:   AUDIO_BASE + 'music-menu.mp3',
+  qcm:    AUDIO_BASE + 'music-qcm.mp3',
+  buzzer: AUDIO_BASE + 'music-buzzer.mp3',
+  podium: AUDIO_BASE + 'music-podium.mp3',
+};
+
+let audioUnlocked = false;
+let currentTrack  = null;       // clé de la piste actuelle
+let fadeInterval  = null;
+const AUDIO_VOL   = 0.35;       // volume normal
+const FADE_STEPS  = 20;
+const FADE_DELAY  = 25;         // ms entre chaque step → fade de 500ms
+
+const bgAudio = document.getElementById('bg-audio');
+
+// iOS : débloquer l'audio au premier geste utilisateur
+function unlockAudioIfNeeded() {
+  if (audioUnlocked) return;
+  audioUnlocked = true;
+  // Jouer 100ms de silence pour déverrouiller l'AudioContext iOS
+  const sampleRate = 22050;
+  const numSamples = Math.floor(sampleRate * 0.1);
+  const dataSize   = numSamples * 2;
+  const buf        = new ArrayBuffer(44 + dataSize);
+  const v          = new DataView(buf);
+  const w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, 'RIFF'); v.setUint32(4, 36 + dataSize, true); w(8, 'WAVE');
+  w(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true);
+  v.setUint16(22, 1, true); v.setUint32(24, sampleRate, true);
+  v.setUint32(28, sampleRate * 2, true); v.setUint16(32, 2, true);
+  v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, dataSize, true);
+  const blob = new Blob([buf], { type: 'audio/wav' });
+  const url  = URL.createObjectURL(blob);
+  const tmp  = new Audio(url);
+  tmp.play().then(() => {
+    tmp.pause();
+    URL.revokeObjectURL(url);
+    // Relancer la piste en cours si elle était bloquée
+    if (currentTrack && bgAudio.paused) {
+      bgAudio.play().catch(() => {});
+    }
+  }).catch(() => {});
+}
+
+// Déclencher le déverrouillage au premier clic/tap
+document.addEventListener('click',      unlockAudioIfNeeded, { once: true });
+document.addEventListener('touchstart', unlockAudioIfNeeded, { once: true });
+
+function clearFade() {
+  if (fadeInterval) { clearInterval(fadeInterval); fadeInterval = null; }
+}
+
+// Fade out puis stop
+function fadeOutAndStop(onDone) {
+  clearFade();
+  if (bgAudio.paused || bgAudio.volume === 0) {
+    bgAudio.pause(); bgAudio.src = '';
+    if (onDone) onDone();
+    return;
+  }
+  const step = bgAudio.volume / FADE_STEPS;
+  fadeInterval = setInterval(() => {
+    if (bgAudio.volume > step) {
+      bgAudio.volume = Math.max(0, bgAudio.volume - step);
+    } else {
+      clearFade();
+      bgAudio.pause(); bgAudio.volume = AUDIO_VOL;
+      bgAudio.src = '';
+      if (onDone) onDone();
+    }
+  }, FADE_DELAY);
+}
+
+// Fade in depuis 0 jusqu'à AUDIO_VOL
+function fadeIn() {
+  clearFade();
+  bgAudio.volume = 0;
+  const step = AUDIO_VOL / FADE_STEPS;
+  fadeInterval = setInterval(() => {
+    if (bgAudio.volume < AUDIO_VOL - step) {
+      bgAudio.volume = Math.min(AUDIO_VOL, bgAudio.volume + step);
+    } else {
+      bgAudio.volume = AUDIO_VOL;
+      clearFade();
+    }
+  }, FADE_DELAY);
+}
+
+// Fonction principale : switcher vers une piste
+function playTrack(trackKey) {
+  if (!trackKey || currentTrack === trackKey) return;
+  const src = MUSIC_TRACKS[trackKey];
+  if (!src) return;
+
+  const doPlay = () => {
+    currentTrack = trackKey;
+    bgAudio.src = src;
+    bgAudio.loop = true;
+    bgAudio.volume = 0;
+    bgAudio.load();
+    bgAudio.play().then(() => {
+      fadeIn();
+    }).catch(() => {
+      // iOS bloqué — on garde la piste en mémoire, elle se lancera à unlockAudio
+    });
+  };
+
+  if (!bgAudio.paused && bgAudio.src) {
+    fadeOutAndStop(doPlay);
+  } else {
+    doPlay();
+  }
+}
+
+// Arrêter la musique (avec fade)
+function stopMusic() {
+  if (currentTrack) {
+    currentTrack = null;
+    fadeOutAndStop();
+  }
+}
+
+// Pause rapide de la musique (garde la position) — pour le buzzer
+let musicPausedForBuzz = false;
+function pauseMusicForBuzz() {
+  if (bgAudio.paused || musicPausedForBuzz) return;
+  musicPausedForBuzz = true;
+  clearFade();
+  // Fade out rapide (150ms) puis pause
+  const startVol = bgAudio.volume;
+  const steps = 6;
+  const step = startVol / steps;
+  let count = 0;
+  const quick = setInterval(() => {
+    count++;
+    bgAudio.volume = Math.max(0, startVol - step * count);
+    if (count >= steps) {
+      clearInterval(quick);
+      bgAudio.pause();
+      bgAudio.volume = AUDIO_VOL;
+    }
+  }, 25);
+}
+
+// Reprise de la musique après le buzzer
+function resumeMusicAfterBuzz() {
+  if (!musicPausedForBuzz) return;
+  musicPausedForBuzz = false;
+  if (!currentTrack) return;
+  // Fade in rapide (200ms)
+  bgAudio.volume = 0;
+  bgAudio.play().catch(() => {});
+  const steps = 8;
+  const step = AUDIO_VOL / steps;
+  let count = 0;
+  const quick = setInterval(() => {
+    count++;
+    bgAudio.volume = Math.min(AUDIO_VOL, step * count);
+    if (count >= steps) clearInterval(quick);
+  }, 25);
+}
+
+// ============================================================
+// Déclencher buzz SFX + pause musique — appelé quand le premier buzz arrive
+// Son : fichier buzzer.mp3 à placer à la racine du repo GitHub
+let _buzzSoundPlayed = false;
+let _buzzerAudio = null;
+
+function playBuzzerSFX() {
+  try {
+    if (!_buzzerAudio) {
+      _buzzerAudio = new Audio('./buzzer.mp3');
+      _buzzerAudio.volume = 0.9;
+    }
+    _buzzerAudio.currentTime = 0;
+    _buzzerAudio.play().catch(() => {});
+  } catch (e) {}
+}
+
+function onFirstBuzz() {
+  if (_buzzSoundPlayed) return;
+  _buzzSoundPlayed = true;
+  playBuzzerSFX();
+  pauseMusicForBuzz();
+}
+
+function resetBuzzSound() {
+  _buzzSoundPlayed = false;
+}
+
+// Déclenche la bonne piste selon l'écran actif
+function updateMusicForScreen(screenId) {
+  switch (screenId) {
+    case 'menu':
+    case 'create':
+    case 'join':
+    case 'join-choice':
+    case 'login':
+    case 'setup':
+    case 'account':
+    case 'playlists':
+    case 'playlist-edit':
+      playTrack('menu');
+      break;
+    case 'lobby':
+    case 'player-lobby':
+    case 'intermission':
+    case 'countdown':
+      playTrack('menu');
+      break;
+    case 'projection':
+    case 'player':
+      // Lire le mode depuis Firebase (State.mode peut être null côté joueur)
+      if ((State.lastState?.mode || State.mode) === 'qcm') playTrack('qcm');
+      else playTrack('buzzer');
+      break;
+    case 'control':
+      if ((State.lastState?.mode || State.mode) === 'qcm') playTrack('qcm');
+      else playTrack('buzzer');
+      break;
+    case 'podium':
+      playTrack('podium');
+      break;
+    default:
+      break;
+  }
+}
+
 // Boutons modale contrôle distant
 $('modal-control-done').addEventListener('click', () => {
   $('modal-control-setup').classList.remove('active');
@@ -2681,6 +3049,9 @@ function startCreate(mode) {
   $('opt-soiree-toggle').classList.remove('on');
   $('playlist-normal').style.display = '';
   $('playlist-soiree').style.display = 'none';
+
+  // Reset lecture vocale
+  $('opt-tts-toggle').classList.remove('on');
 
   if (State.isRestartMode) {
     $('create-launch').textContent = '🔄 Relancer la partie';
@@ -3098,6 +3469,9 @@ $('create-launch').addEventListener('click', async () => {
   const hostMode = $('opt-host-mode').classList.contains('on');
   State.hostMode = hostMode;
 
+  // Lecture vocale
+  State.ttsEnabled = $('opt-tts-toggle').classList.contains('on');
+
   // Pseudo + emoji : forcés si mode hôte affichage, sinon saisis
   if (hostMode) {
     State.hostName  = 'Hôte';
@@ -3377,6 +3751,7 @@ function leaveAll() {
   stopReactionsCleanup();
   stopBuzzerTimer();
   stopBuzzerPlayerTimer();
+  stopSpeech();
   if (playerCountdownTimer) { clearInterval(playerCountdownTimer); playerCountdownTimer = null; }
   if (State._cooldownInterval) { clearInterval(State._cooldownInterval); State._cooldownInterval = null; }
   seenReactions.clear();
@@ -3674,7 +4049,9 @@ function cancelAutoLaunch() {
 let countdownTimer = null;
 function startCountdownAnimation() {
   if (countdownTimer) return;
-  $('cd-title').textContent = State.mode === 'qcm' ? '🎯 MODE QCM' : '🔔 MODE BUZZER';
+  // Lire le mode depuis Firebase (State.mode peut être null côté joueur)
+  const mode = State.lastState?.mode || State.mode || 'qcm';
+  $('cd-title').textContent = mode === 'qcm' ? '🎯 MODE QCM' : '🔔 MODE BUZZER';
   $('cd-subtitle').textContent = State.lastState?.playlistName || '';
   let n = 10;
   $('cd-num').textContent = n;
@@ -3713,8 +4090,10 @@ async function startPlayingPhase() {
 // ============================================================
 async function nextQuestion() {
   if (!isHostLike() || !State.playlist) return;
-  // Arrêter le timer buzzer
+  // Arrêter le timer buzzer + reset son buzzer
   stopBuzzerTimer();
+  resetBuzzSound();
+  resumeMusicAfterBuzz(); // au cas où la musique était encore en pause
 
   const remaining = State.playlist.questions
     .map((_, i) => i)
@@ -3742,11 +4121,21 @@ async function nextQuestion() {
   await remove(ref(db, 'rooms/' + State.roomCode + '/buzzes')).catch(() => {});
   await remove(ref(db, 'rooms/' + State.roomCode + '/answers')).catch(() => {});
   await remove(ref(db, 'rooms/' + State.roomCode + '/wrongBuzzes')).catch(() => {});
+  // Nettoyer le log au début de la partie (première question)
+  if (State.usedIndexes.size === 1) {
+    await remove(ref(db, 'rooms/' + State.roomCode + '/log')).catch(() => {});
+  }
 
   const privateView = State.mode === 'qcm'
     ? { answer: q.choices[q.correct], correctIndex: q.correct, question: q.q }
     : { answer: q.a || '', question: q.q };
   await set(ref(db, 'private_views/' + State.roomCode), privateView).catch(() => {});
+
+  // Lecture vocale de la question (si activée)
+  // Petit délai pour laisser le temps à l'UI de se mettre à jour
+  if (State.ttsEnabled && q.q) {
+    setTimeout(() => speakText(q.q), 600);
+  }
 }
 
 // Marquer le premier buzzeur comme "mauvaise réponse" → cooldown 5s + il peut rebuzzer
@@ -3766,6 +4155,9 @@ async function markWrongBuzzer() {
     serverTimestamp()).catch(() => {});
   // Supprimer son buzz pour libérer le suivant
   await remove(ref(db, 'rooms/' + State.roomCode + '/buzzes/' + uid)).catch(() => {});
+  // Reprendre la musique car la question continue
+  resetBuzzSound();   // permet au prochain buzzeur de déclencher le son à nouveau
+  resumeMusicAfterBuzz();
 }
 
 async function revealAnswer() {
@@ -3777,47 +4169,69 @@ async function revealAnswer() {
   else upd.answer = q.a || '';
   await update(ref(db, 'rooms/' + State.roomCode + '/round'), upd);
 
-  // Distribution des scores
+  // Reprendre la musique (buzzer : elle était en pause pendant le buzz)
+  resumeMusicAfterBuzz();
+
   await distributeScores();
 }
 
 async function distributeScores() {
   const data = State.lastState;
   if (!data) return;
+  const qIdx = State.currentQuestionIndex;
+  const logEntry = { qIdx, mode: State.mode, answers: {} };
 
   if (State.mode === 'qcm') {
-    const correctIdx = State.playlist.questions[State.currentQuestionIndex].correct;
-    const answers = Object.entries(data.answers || {})
-      .filter(([_, a]) => a.choice === correctIdx)
-      .sort((a, b) => a[1].tapTime - b[1].tapTime);
-    const timerMs = State.qcmConfig.timerSec * 1000;
+    const correctIdx = State.playlist.questions[qIdx].correct;
+    const allAnswers = Object.entries(data.answers || {});
     const openedAt = data.round.openedAt;
-    answers.forEach(async ([uid, ans]) => {
-      // Calcul du score : 50 + (temps_restant * 10) en secondes
-      const responseTime = (ans.tapTime - openedAt) / 1000;
-      const remaining = Math.max(0, State.qcmConfig.timerSec - responseTime);
-      const pts = Math.round(50 + remaining * 10);
-      // On lit le score actuel et on ajoute
+    const timerSec = State.qcmConfig.timerSec;
+
+    await Promise.all(allAnswers.map(async ([uid, ans]) => {
+      const isCorrect = ans.choice === correctIdx;
+      const responseTime = Math.round(((ans.tapTime - openedAt) / 1000) * 10) / 10;
       const player = data.players?.[uid];
-      if (player) {
+      // Log
+      logEntry.answers[uid] = {
+        name: player?.name || uid, emoji: player?.emoji || '⚡',
+        correct: isCorrect, responseTime, choice: ans.choice,
+      };
+      if (isCorrect && player) {
+        const remaining = Math.max(0, timerSec - responseTime);
+        const pts = Math.round(50 + remaining * 10);
         const newScore = (player.score || 0) + pts;
         await update(ref(db, 'rooms/' + State.roomCode + '/players/' + uid), { score: newScore }).catch(() => {});
       }
-    });
+    }));
   } else {
-    // Mode buzzer : seul le 1er gagne (l'animateur valide à l'oral)
-    // Ici on attribue +100pts au premier qui a buzzé
+    // Buzzer
     const buzzes = Object.entries(data.buzzes || {})
       .sort((a, b) => a[1].tapTime - b[1].tapTime);
     if (buzzes.length > 0) {
-      const [uid, _] = buzzes[0];
+      const [uid] = buzzes[0];
       const player = data.players?.[uid];
+      logEntry.answers[uid] = {
+        name: player?.name || uid, emoji: player?.emoji || '⚡',
+        correct: true, rank: 1,
+      };
       if (player) {
         const newScore = (player.score || 0) + 100;
         await update(ref(db, 'rooms/' + State.roomCode + '/players/' + uid), { score: newScore }).catch(() => {});
       }
+      // Mauvais buzzeurs
+      const wrongBuzzes = data.wrongBuzzes || {};
+      Object.keys(wrongBuzzes).forEach((uid2) => {
+        const p2 = data.players?.[uid2];
+        logEntry.answers[uid2] = {
+          name: p2?.name || uid2, emoji: p2?.emoji || '⚡',
+          correct: false, rank: 99,
+        };
+      });
     }
   }
+
+  // Sauvegarder dans le log Firebase
+  await set(ref(db, 'rooms/' + State.roomCode + '/log/' + qIdx), logEntry).catch(() => {});
 }
 
 async function replayCurrentQuestion() {
@@ -3897,7 +4311,9 @@ async function nextQcmRound() {
 
 function updateProjCountdown(remaining, total) {
   $('proj-cd-num').textContent = Math.max(0, Math.ceil(remaining));
-  const pct = Math.max(0, Math.min(100, (remaining / total) * 100));
+  // Offset -1s comme dans le blind test : la barre finit visuellement à 0 quand remaining=1
+  const adjusted = Math.max(0, remaining - 1);
+  const pct = Math.max(0, Math.min(100, (adjusted / Math.max(1, total - 1)) * 100));
   $('proj-timer-fill').style.width = pct + '%';
   const el = $('proj-countdown');
   el.classList.remove('warn', 'danger');
@@ -3979,9 +4395,9 @@ $('reactions-bar').addEventListener('click', async (e) => {
   const btn = e.target.closest('.reaction-btn');
   if (!btn) return;
   if (!isPlayerLike() || !State.roomCode || !State.uid) return;
-  // Throttle : pas plus d'une réaction toutes les 500 ms par utilisateur
+  // Throttle : pas plus d'une réaction toutes les 300 ms
   const now = Date.now();
-  if (State.lastReactionAt && now - State.lastReactionAt < 500) return;
+  if (State.lastReactionAt && now - State.lastReactionAt < 300) return;
   State.lastReactionAt = now;
 
   const emoji = btn.dataset.emoji;
@@ -4065,6 +4481,7 @@ function showDynMsg(text, durationMs = 2500) {
 
 // Détection des moments-clés : on observe les changements d'état
 let prevLeader = null;
+let prevLeaderScore = 0;
 let prevPhase = null;
 let prevStatus = null;
 let prevFirstBuzzer = null;
@@ -4076,24 +4493,33 @@ function detectDynEvents(data) {
   if (data.mode === 'buzzer' && data.round?.status === 'armed') {
     const buzzes = Object.entries(data.buzzes || {}).sort((a, b) => a[1].tapTime - b[1].tapTime);
     if (buzzes.length > 0) {
-      const [uid, b] = buzzes[0];
+      const [uid] = buzzes[0];
       if (uid !== prevFirstBuzzer) {
         prevFirstBuzzer = uid;
         const p = data.players?.[uid];
         if (p) showDynMsg(`⚡ ${escapeHtml(p.name || 'Joueur')} a buzzé en premier !`, 2000);
+        // Son buzzer + pause musique
+        onFirstBuzz();
       }
-    } else { prevFirstBuzzer = null; }
-  } else { prevFirstBuzzer = null; }
+    } else {
+      prevFirstBuzzer = null;
+    }
+  } else {
+    prevFirstBuzzer = null;
+  }
 
-  // Évènement : nouveau leader au classement
-  // (uniquement après une révélation, pour ne pas spammer)
-  if (data.round?.status === 'revealed' && data.round?.status !== prevStatus) {
+  // Évènement : nouveau leader SEULEMENT après révélation ET changement réel de leader
+  const curStatus = data.round?.status;
+  if (curStatus === 'revealed' && curStatus !== prevStatus) {
     if (data.teamsEnabled && data.teams) {
       const teams = computeTeamScores(data);
       if (teams.length > 0 && teams[0].score > 0) {
         const top = teams[0];
-        if (prevLeader !== 'T_' + top.id) {
-          prevLeader = 'T_' + top.id;
+        const key = 'T_' + top.id;
+        // Ne déclenche que si c'est un NOUVEAU leader (pas juste une confirmation)
+        if (prevLeader !== key && top.score > prevLeaderScore) {
+          prevLeader = key;
+          prevLeaderScore = top.score;
           showDynMsg(`🚩 <b>${escapeHtml(top.name)}</b> prend la tête !`, 2200);
         }
       }
@@ -4103,17 +4529,20 @@ function detectDynEvents(data) {
         .sort((a, b) => (b.score || 0) - (a.score || 0));
       if (players.length > 0 && players[0].score > 0) {
         const top = players[0];
-        if (prevLeader !== 'P_' + top.id) {
-          prevLeader = 'P_' + top.id;
+        const key = 'P_' + top.id;
+        if (prevLeader !== key && (top.score || 0) > prevLeaderScore) {
+          prevLeader = key;
+          prevLeaderScore = top.score || 0;
           showDynMsg(`👑 <b>${escapeHtml(top.name || 'Joueur')}</b> prend la tête !`, 2200);
         }
       }
     }
   }
-  prevStatus = data.round?.status;
+  prevStatus = curStatus;
 
   // Évènement : début de la partie
   if (data.phase === 'playing' && prevPhase !== 'playing') {
+    prevLeader = null; prevLeaderScore = 0; // reset au début de chaque partie
     showDynMsg('🚀 C\'est parti !', 1500);
   }
   prevPhase = data.phase;
@@ -4194,14 +4623,16 @@ function updateBuzzerPlayerTimer(openedAt) {
     const fillEl = $('p-buzzer-timer-fill');
     if (!numEl) return;
     numEl.textContent = Math.ceil(remaining);
-    const pct = Math.max(0, Math.min(100, (remaining / BUZZER_TIMER_SEC) * 100));
+    // Offset -1s
+    const adjusted = Math.max(0, remaining - 1);
+    const pct = Math.max(0, Math.min(100, (adjusted / Math.max(1, BUZZER_TIMER_SEC - 1)) * 100));
     fillEl.style.width = pct + '%';
     numEl.classList.remove('warn', 'danger');
     if (remaining <= 5) numEl.classList.add('danger');
     else if (remaining <= 8) numEl.classList.add('warn');
     if (remaining <= 0) stopBuzzerPlayerTimer();
   };
-  if (buzzerPlayerTimerInterval) return; // déjà en cours
+  if (buzzerPlayerTimerInterval) return;
   tick();
   buzzerPlayerTimerInterval = setInterval(tick, 200);
 }
@@ -4719,7 +5150,9 @@ function updatePlayerCountdown(data) {
     const elapsed = (serverNow() - round.openedAt) / 1000;
     const remaining = Math.max(0, total - elapsed);
     numEl.textContent = Math.ceil(remaining);
-    const pct = Math.max(0, Math.min(100, (remaining / total) * 100));
+    // Offset -1s : barre vide quand remaining=1
+    const adjusted = Math.max(0, remaining - 1);
+    const pct = Math.max(0, Math.min(100, (adjusted / Math.max(1, total - 1)) * 100));
     fillEl.style.width = pct + '%';
     tEl.classList.remove('warn', 'danger');
     if (remaining <= 5) tEl.classList.add('danger');
@@ -4903,6 +5336,9 @@ function showPodium(data) {
   const isHost = isHostLike();
   $('podium-host-btns').style.display = isHost ? '' : 'none';
   $('podium-player-btns').style.display = !isHost ? '' : 'none';
+
+  // Stats (depuis le log Firebase)
+  computeAndShowStats(data);
 }
 
 function showPodiumPlayers(data) {
@@ -4990,6 +5426,161 @@ function spawnConfetti() {
     container.appendChild(c);
     setTimeout(() => c.remove(), 6000);
   }
+}
+
+// ============================================================
+//  STATS DE FIN DE PARTIE
+// ============================================================
+async function computeAndShowStats(data) {
+  const wrap = $('podium-stats-wrap');
+  wrap.innerHTML = '';
+
+  const log = data.log;
+  if (!log) return;
+
+  const logEntries = Object.values(log).sort((a, b) => a.qIdx - b.qIdx);
+  if (!logEntries.length) return;
+
+  const mode = data.mode || 'qcm';
+  const players = Object.entries(data.players || {});
+  if (players.length < 2) return; // stats sans intérêt à 1 joueur
+
+  // Construit les stats par joueur
+  const pData = {};
+  players.forEach(([uid, p]) => {
+    pData[uid] = {
+      name: p.name || uid, emoji: p.emoji || '⚡',
+      correct: 0, wrong: 0, total: 0,
+      responseTimes: [], maxStreak: 0, currentStreak: 0,
+      neverWrong: true, fastAnswers: 0,
+      rank1Correct: 0, rank1Wrong: 0, lastCorrect: 0,
+    };
+  });
+
+  logEntries.forEach((entry) => {
+    if (!entry.answers) return;
+    const answered = Object.entries(entry.answers)
+      .map(([uid, a]) => ({ uid, ...a }))
+      .sort((a, b) => (a.responseTime ?? 999) - (b.responseTime ?? 999));
+    const n = answered.length;
+
+    answered.forEach((a, idx) => {
+      const d = pData[a.uid];
+      if (!d) return;
+      d.total++;
+      if (a.responseTime !== undefined) d.responseTimes.push(a.responseTime);
+      if (a.correct) {
+        d.correct++;
+        d.currentStreak++;
+        if (d.currentStreak > d.maxStreak) d.maxStreak = d.currentStreak;
+        if (mode === 'qcm' && a.responseTime < 5) d.fastAnswers++;
+        if (idx === 0) d.rank1Correct++;
+        if (idx === n - 1 && n > 1) d.lastCorrect++;
+      } else {
+        d.wrong++;
+        d.neverWrong = false;
+        d.currentStreak = 0;
+        if (idx === 0) d.rank1Wrong++;
+      }
+    });
+  });
+
+  const uids = Object.keys(pData).filter(u => pData[u].total > 0);
+  if (!uids.length) return;
+
+  const avg = arr => arr.length ? arr.reduce((s, v) => s + v, 0) / arr.length : 999;
+  const stats = [];
+  const push = (emoji, title, desc, player, value) =>
+    stats.push({ emoji, title, desc, player, value });
+
+  // 🧠 LE GÉNIE — meilleur taux de bonnes réponses (min 3 questions)
+  const genius = uids.filter(u => pData[u].total >= 3)
+    .sort((a, b) => (pData[b].correct / pData[b].total) - (pData[a].correct / pData[a].total))[0];
+  if (genius) {
+    const pct = Math.round(pData[genius].correct / pData[genius].total * 100);
+    if (pct >= 70) push('🧠', 'LE GÉNIE', 'Meilleur taux de bonnes réponses',
+      pData[genius].emoji + ' ' + pData[genius].name, pct + '% de réussite !');
+  }
+
+  // 🔥 EN FEU — plus longue série
+  const onFire = uids.reduce((b, u) => pData[u].maxStreak > pData[b].maxStreak ? u : b, uids[0]);
+  if (pData[onFire].maxStreak >= 3) push('🔥', 'EN FEU',
+    'Plus longue série de bonnes réponses d\'affilée',
+    pData[onFire].emoji + ' ' + pData[onFire].name,
+    pData[onFire].maxStreak + ' bonnes réponses d\'affilée !');
+
+  // 🦅 L'AIGLE — aucune erreur
+  const aigle = uids.find(u => pData[u].neverWrong && pData[u].correct >= 3);
+  if (aigle) push('🦅', "L'AIGLE", 'Aucune erreur de toute la partie',
+    pData[aigle].emoji + ' ' + pData[aigle].name,
+    pData[aigle].correct + ' bonnes réponses, 0 erreur !');
+
+  // 🤡 LE BOULET — plus de mauvaises réponses
+  const boulet = uids.reduce((b, u) => pData[u].wrong > pData[b].wrong ? u : b, uids[0]);
+  if (pData[boulet].wrong >= 3) push('🤡', 'LE BOULET', 'Recordman des mauvaises réponses',
+    pData[boulet].emoji + ' ' + pData[boulet].name,
+    pData[boulet].wrong + ' mauvaises réponses 😬');
+
+  if (mode === 'qcm') {
+    // ⚡ L'ÉCLAIR — le plus de réponses rapides (< 5s)
+    const eclair = uids.reduce((b, u) => pData[u].fastAnswers > pData[b].fastAnswers ? u : b, uids[0]);
+    if (pData[eclair].fastAnswers >= 2) push('⚡', "L'ÉCLAIR",
+      'Le plus de bonnes réponses en moins de 5 secondes',
+      pData[eclair].emoji + ' ' + pData[eclair].name,
+      pData[eclair].fastAnswers + 'x juste en moins de 5s !');
+
+    // 😴 LE DORMEUR — temps de réponse moyen le plus lent
+    const dormeur = uids.filter(u => pData[u].responseTimes.length >= 3)
+      .sort((a, b) => avg(pData[b].responseTimes) - avg(pData[a].responseTimes))[0];
+    if (dormeur) {
+      const t = avg(pData[dormeur].responseTimes).toFixed(1);
+      if (parseFloat(t) > 15) push('😴', 'LE DORMEUR', 'Temps de réponse moyen le plus lent',
+        pData[dormeur].emoji + ' ' + pData[dormeur].name, t + 's de moyenne en moyenne !');
+    }
+
+    // 💨 TROP PRESSÉ — 1er mais faux
+    const presse = uids.reduce((b, u) => pData[u].rank1Wrong > pData[b].rank1Wrong ? u : b, uids[0]);
+    if (pData[presse].rank1Wrong >= 2) push('💨', 'TROP PRESSÉ',
+      'Le plus souvent 1er à répondre... mais faux',
+      pData[presse].emoji + ' ' + pData[presse].name,
+      pData[presse].rank1Wrong + 'x premier... mais faux !');
+  } else {
+    // 🎯 LE SNIPER — 1er buzz correct le plus souvent
+    const sniper = uids.reduce((b, u) => pData[u].rank1Correct > pData[b].rank1Correct ? u : b, uids[0]);
+    if (pData[sniper].rank1Correct >= 2) push('🎯', 'LE SNIPER',
+      'Le plus souvent 1er à buzzer ET correct',
+      pData[sniper].emoji + ' ' + pData[sniper].name,
+      pData[sniper].rank1Correct + 'x 1er buzz correct !');
+
+    // 💨 TROP PRESSÉ — le plus de mauvais buzzes
+    const presse = uids.reduce((b, u) => pData[u].rank1Wrong > pData[b].rank1Wrong ? u : b, uids[0]);
+    if (pData[presse].rank1Wrong >= 2) push('💨', 'TROP PRESSÉ',
+      'Buzz souvent en premier... mais mauvaise réponse',
+      pData[presse].emoji + ' ' + pData[presse].name,
+      pData[presse].rank1Wrong + 'x buzz incorrect !');
+  }
+
+  // 🐢 LE DERNIER RECOURS — souvent le dernier à répondre mais correct
+  const tortue = uids.reduce((b, u) => pData[u].lastCorrect > pData[b].lastCorrect ? u : b, uids[0]);
+  if (pData[tortue].lastCorrect >= 2) push('🐢', 'LE DERNIER RECOURS',
+    'Souvent le dernier à répondre... mais correct !',
+    pData[tortue].emoji + ' ' + pData[tortue].name,
+    pData[tortue].lastCorrect + 'x dernier mais correct !');
+
+  if (!stats.length) return;
+
+  wrap.innerHTML = `
+    <div class="stats-title">🎭 Récompenses spéciales</div>
+    <div class="stats-grid">
+      ${stats.map(s => `
+        <div class="stat-card">
+          <div class="stat-emoji">${s.emoji}</div>
+          <div class="stat-title">${escapeHtml(s.title)}</div>
+          <div class="stat-desc">${escapeHtml(s.desc)}</div>
+          <div class="stat-player">${escapeHtml(s.player)}</div>
+          <div class="stat-value">${escapeHtml(s.value)}</div>
+        </div>`).join('')}
+    </div>`;
 }
 
 // Boutons podium
@@ -5513,6 +6104,25 @@ $('fab-panel').addEventListener('click', (e) => e.stopPropagation());
 $('fab-home').addEventListener('click', () => {
   $('fab-panel').classList.remove('open');
   showScreen('menu');
+});
+
+// Bouton mute musique
+let musicMuted = false;
+$('fab-mute').addEventListener('click', () => {
+  $('fab-panel').classList.remove('open');
+  musicMuted = !musicMuted;
+  if (musicMuted) {
+    clearFade();
+    bgAudio.volume = 0;
+    $('fab-mute').textContent = '🔇 Remettre la musique';
+  } else {
+    bgAudio.volume = AUDIO_VOL;
+    $('fab-mute').textContent = '🔊 Couper la musique';
+    // Si la piste était en pause à cause du mute, la relancer
+    if (currentTrack && bgAudio.paused) {
+      bgAudio.play().catch(() => {});
+    }
+  }
 });
 $('fab-playlists').addEventListener('click', () => {
   $('fab-panel').classList.remove('open');
