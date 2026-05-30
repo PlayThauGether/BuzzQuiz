@@ -5762,9 +5762,7 @@ async function refreshPlaylistsScreen() {
         ${p.createdBy ? '<div style="font-size:11px; color:var(--ink-dim); margin-top:2px;">Par ' + escapeHtml(p.createdBy) + '</div>' : ''}
       </div>
       <div class="pls-item-actions">
-        <button data-action="edit" data-id="${id}">✏ Modifier</button>
         <button data-action="export" data-id="${id}">📥 Exporter</button>
-        <button data-action="duplicate" data-id="${id}">📋 Dupliquer</button>
         <button data-action="delete" data-id="${id}" class="danger">🗑 Supprimer</button>
       </div>
     </div>`;
@@ -5774,13 +5772,8 @@ async function refreshPlaylistsScreen() {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const { action, id } = btn.dataset;
-      if (action === 'edit') {
-        // Ouvrir dans le générateur avec juste l'ID Firebase
-        window.open('./quiz-generator.html?id=' + encodeURIComponent(id), '_blank');
-      }
-      else if (action === 'delete') deletePlaylistConfirm(id);
+      if (action === 'delete') deletePlaylistConfirm(id);
       else if (action === 'export') exportPlaylist(id);
-      else if (action === 'duplicate') duplicatePlaylist(id);
     });
   });
 }
