@@ -645,32 +645,16 @@ document.getElementById('file-import').addEventListener('change', (e) => {
 // Init
 renderList();
 
-// ============================================================
-//  CHARGEMENT DEPUIS ?load= (ouverture depuis BuzzQuiz)
-// ============================================================
-(function loadFromUrl() {
-  const params = new URLSearchParams(location.search);
-  const encoded = params.get('load');
-  if (!encoded) return;
-  try {
-    const json = decodeURIComponent(escape(atob(encoded)));
-    const data = JSON.parse(json);
-    if (data.name) document.getElementById('pl-name').value = data.name;
-    if (data.description) document.getElementById('pl-desc').value = data.description;
-    if (Array.isArray(data.questions) && data.questions.length) {
-      questions = data.questions;
-      renderList();
-    }
-    // Stocker l'id Firebase pour la sauvegarde
-    window._editingFirebaseId = data.id || null;
-    // Afficher le bouton de sauvegarde Firebase
-    if (window._editingFirebaseId) {
-      document.getElementById('firebase-save-section').style.display = '';
-    }
-  } catch(e) {
-    console.warn('Impossible de charger la playlist depuis URL', e);
-  }
-})();
+// Exposer pour le module Firebase
+window._questions = questions;
+window._renderList = renderList;
+window._toast = toast;
+
+// Proxy pour que le module puisse modifier questions[]
+Object.defineProperty(window, '_questions', {
+  get: () => questions,
+  set: (v) => { questions = v; },
+});
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
@@ -688,9 +672,33 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const db  = getDatabase(app);
+const db   = getDatabase(app);
 const auth = getAuth(app);
 signInAnonymously(auth).catch(() => {});
+
+// Chargement depuis ?id= après l'auth
+auth.onAuthStateChanged(async (user) => {
+  if (!user) return;
+  const params = new URLSearchParams(location.search);
+  const id = params.get('id');
+  if (!id) return;
+  try {
+    const snap = await get(ref(db, 'playlists/' + id));
+    if (!snap.exists()) { window._toast('⚠ Playlist introuvable'); return; }
+    const data = snap.val();
+    if (data.name) document.getElementById('pl-name').value = data.name;
+    if (data.description) document.getElementById('pl-desc').value = data.description;
+    if (Array.isArray(data.questions) && data.questions.length) {
+      window._questions = data.questions;
+      window._renderList();
+    }
+    window._editingFirebaseId = id;
+    document.getElementById('firebase-save-section').style.display = '';
+    window._toast('✓ ' + data.questions?.length + ' questions chargées — ' + data.name);
+  } catch(e) {
+    window._toast('Erreur : ' + e.message);
+  }
+});
 
 document.getElementById('btn-save-firebase').addEventListener('click', async () => {
   const name = document.getElementById('pl-name').value.trim();
