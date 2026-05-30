@@ -325,6 +325,16 @@ textarea { resize: vertical; min-height: 70px; line-height: 1.5; }
       <div class="btn-row" style="margin-top:14px;">
         <button class="btn btn-accent btn-full" id="btn-export-main">💾 Exporter la playlist JSON</button>
       </div>
+
+      <!-- Visible uniquement quand ouvert depuis BuzzQuiz (bouton Modifier) -->
+      <div id="firebase-save-section" style="display:none; margin-top:10px;">
+        <button class="btn btn-mint btn-full" id="btn-save-firebase">
+          ☁️ Sauvegarder sur BuzzQuiz
+        </button>
+        <p style="font-size:11px; color:#9b8fc4; text-align:center; margin-top:6px;">
+          Met à jour directement la playlist dans Firebase
+        </p>
+      </div>
     </div>
   </div>
 </div>
@@ -634,6 +644,79 @@ document.getElementById('file-import').addEventListener('change', (e) => {
 
 // Init
 renderList();
+
+// ============================================================
+//  CHARGEMENT DEPUIS ?load= (ouverture depuis BuzzQuiz)
+// ============================================================
+(function loadFromUrl() {
+  const params = new URLSearchParams(location.search);
+  const encoded = params.get('load');
+  if (!encoded) return;
+  try {
+    const json = decodeURIComponent(escape(atob(encoded)));
+    const data = JSON.parse(json);
+    if (data.name) document.getElementById('pl-name').value = data.name;
+    if (data.description) document.getElementById('pl-desc').value = data.description;
+    if (Array.isArray(data.questions) && data.questions.length) {
+      questions = data.questions;
+      renderList();
+    }
+    // Stocker l'id Firebase pour la sauvegarde
+    window._editingFirebaseId = data.id || null;
+    // Afficher le bouton de sauvegarde Firebase
+    if (window._editingFirebaseId) {
+      document.getElementById('firebase-save-section').style.display = '';
+    }
+  } catch(e) {
+    console.warn('Impossible de charger la playlist depuis URL', e);
+  }
+})();
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getDatabase, ref, update } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBChD21JJPw_ZRM650G5nqdp408SO8itaQ",
+  authDomain: "buzzquizz-a407f.firebaseapp.com",
+  databaseURL: "https://buzzquizz-a407f-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "buzzquizz-a407f",
+  storageBucket: "buzzquizz-a407f.firebasestorage.app",
+  messagingSenderId: "60888755428",
+  appId: "1:60888755428:web:9e53ebc25995dedc2e50f1"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+const auth = getAuth(app);
+signInAnonymously(auth).catch(() => {});
+
+document.getElementById('btn-save-firebase').addEventListener('click', async () => {
+  const name = document.getElementById('pl-name').value.trim();
+  if (!name) { toast('⚠ Donne un nom à la playlist'); return; }
+  if (!questions.length) { toast('⚠ Ajoute au moins une question'); return; }
+  if (!window._editingFirebaseId) { toast('⚠ ID Firebase manquant'); return; }
+
+  const btn = document.getElementById('btn-save-firebase');
+  btn.disabled = true;
+  btn.textContent = '⏳ Sauvegarde…';
+
+  try {
+    await update(ref(db, 'playlists/' + window._editingFirebaseId), {
+      name,
+      description: document.getElementById('pl-desc').value.trim(),
+      questions,
+    });
+    toast('✅ Playlist sauvegardée sur BuzzQuiz !');
+    btn.textContent = '✅ Sauvegardé !';
+    setTimeout(() => { btn.textContent = '☁️ Sauvegarder sur BuzzQuiz'; btn.disabled = false; }, 2500);
+  } catch(e) {
+    toast('Erreur Firebase : ' + e.message);
+    btn.disabled = false;
+    btn.textContent = '☁️ Sauvegarder sur BuzzQuiz';
+  }
+});
 </script>
 </body>
 </html>

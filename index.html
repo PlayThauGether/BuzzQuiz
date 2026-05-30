@@ -5774,7 +5774,14 @@ async function refreshPlaylistsScreen() {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const { action, id } = btn.dataset;
-      if (action === 'edit') openPlaylistEditor(id);
+      if (action === 'edit') {
+        // Ouvrir dans le générateur standalone avec la playlist encodée en URL
+        const p = getFirebasePlaylist(id);
+        if (!p) { toast('Playlist introuvable'); return; }
+        const payload = JSON.stringify({ ...p, id });
+        const encoded = btoa(unescape(encodeURIComponent(payload)));
+        window.open('./quiz-generator.html?load=' + encoded, '_blank');
+      }
       else if (action === 'delete') deletePlaylistConfirm(id);
       else if (action === 'export') exportPlaylist(id);
       else if (action === 'duplicate') duplicatePlaylist(id);
