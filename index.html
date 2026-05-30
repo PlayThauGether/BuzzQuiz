@@ -1894,11 +1894,28 @@ input.code-input {
       <button class="link-btn" data-home>← Retour</button>
     </div>
     <div class="card">
-      <h2 style="font-size:24px;">📚 Mes playlists</h2>
-      <p class="muted" style="margin-top:6px;">Crée, modifie ou supprime tes playlists. Stockées sur cet appareil.</p>
+      <h2 style="font-size:24px;">📚 Playlists</h2>
+      <p class="muted" style="margin-top:6px;">Gère tes playlists stockées sur Firebase.</p>
+
+      <!-- Lien vers le générateur -->
+      <a href="./quiz-generator.html" target="_blank"
+         style="display:flex; align-items:center; gap:12px; margin-top:16px; padding:14px 16px;
+                background:linear-gradient(135deg,rgba(131,56,236,.15),rgba(255,209,102,.08));
+                border:1px solid rgba(131,56,236,.4); border-radius:14px;
+                text-decoration:none; color:var(--ink); transition:border-color .2s;"
+         onmouseover="this.style.borderColor='var(--accent-2)'"
+         onmouseout="this.style.borderColor='rgba(131,56,236,.4)'">
+        <span style="font-size:32px;">✨</span>
+        <div>
+          <div style="font-weight:700; font-size:15px;">Générateur de quiz</div>
+          <div class="muted" style="font-size:12px; margin-top:2px;">
+            Crée tes questions avec l'aide de Gemini AI → exporte en .json
+          </div>
+        </div>
+        <span style="margin-left:auto; color:var(--accent-2); font-size:18px;">↗</span>
+      </a>
 
       <div class="btn-row" style="margin-top:14px;">
-        <button class="btn primary" id="pls-new">➕ Créer une playlist</button>
         <button class="btn ghost" id="pls-import">📂 Importer un .json</button>
       </div>
       <input type="file" id="pls-import-file" accept=".json,application/json" style="display:none;" />
@@ -1908,10 +1925,7 @@ input.code-input {
         <p class="muted">Chargement…</p>
       </div>
 
-      <div class="section-title">Playlists d'exemple (non modifiables)</div>
-      <div id="pls-server-list">
-        <p class="muted">Chargement…</p>
-      </div>
+      <div id="pls-server-list" style="display:none;"></div>
     </div>
   </div>
 </section>
@@ -4889,11 +4903,13 @@ function renderProjection(data) {
         if (i === round.correct) cls += ' correct';
         else cls += ' wrong';
       }
+      // Votes : visibles UNIQUEMENT après révélation (évite de trahir les choix en cours)
       const votes = voteCounts[i];
+      const showVotes = round.status === 'revealed' && votes > 0;
       return `<div class="${cls}">
         <span class="qcm-letter">${['A','B','C','D'][i]}</span>
         <span class="qcm-text">${escapeHtml(c)}</span>
-        ${votes > 0 ? `<span class="qcm-votes">${votes}</span>` : ''}
+        ${showVotes ? `<span class="qcm-votes">${votes}</span>` : ''}
       </div>`;
     }).join('');
   } else {
@@ -5765,12 +5781,6 @@ async function refreshPlaylistsScreen() {
     });
   });
 }
-
-// Nouvelle playlist
-$('pls-new').addEventListener('click', () => {
-  if (!currentUser?.isAdmin) return toast('Accès admin requis');
-  openPlaylistEditor(null);
-});
 
 // Import JSON → Firebase
 $('pls-import').addEventListener('click', () => $('pls-import-file').click());
