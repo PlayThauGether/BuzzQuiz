@@ -301,7 +301,7 @@ textarea { resize: vertical; min-height: 70px; line-height: 1.5; }
         Gratuit sur <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--gold);">aistudio.google.com</a> — sauvegardée localement.
       </div>
       <div class="api-key-row">
-        <input type="password" id="api-key-input" placeholder="AIza..." />
+        <input type="password" id="api-key-input" placeholder="AIza... ou AQ.Ab8..." />
         <button class="btn btn-ghost btn-sm" id="btn-save-key">Sauver</button>
       </div>
       <div class="api-status" id="api-status-msg"></div>
@@ -367,8 +367,8 @@ if (getApiKey()) {
 
 document.getElementById('btn-save-key').addEventListener('click', () => {
   const key = keyInput.value.trim();
-  if (!key.startsWith('AIza')) {
-    statusMsg.textContent = '✗ Clé invalide (doit commencer par AIza…)';
+  if (!key.startsWith('AIza') && !key.startsWith('AQ.')) {
+    statusMsg.textContent = '✗ Clé invalide (doit commencer par AIza… ou AQ.)';
     statusMsg.className = 'api-status err';
     return;
   }
