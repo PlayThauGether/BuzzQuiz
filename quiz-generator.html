@@ -220,7 +220,6 @@ function resetEditor() {
   [0,1,2,3].forEach(i => { document.getElementById('c'+i).value = ''; });
   document.querySelectorAll('input[name="correct"]').forEach(r => r.checked = false);
   document.getElementById('q-buzzer').value = '';
-  document.getElementById('ai-msg').innerHTML = '';
   document.getElementById('editor-title').textContent = '➕ Nouvelle question';
   editIdx = null;
 }
