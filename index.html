@@ -43,7 +43,7 @@
   --q4: #4be3b0;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html, body { height: 100%; }
+html, body { height: 100%; overflow: hidden; }
 body {
   font-family: 'Outfit', system-ui, sans-serif;
   background: var(--bg);
@@ -52,7 +52,7 @@ body {
   min-height: -webkit-fill-available;
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
-  overflow-x: hidden;
+  overflow: hidden;
 }
 .app { min-height: 100vh; position: relative; }
 .bg {
@@ -80,7 +80,7 @@ body {
 /* ============================================================
    ÉCRANS
    ============================================================ */
-.screen { display: none; min-height: 100dvh; padding: 24px; }
+.screen { display: none; min-height: 100dvh; padding: 24px; overflow-y: auto; }
 .screen.active { display: block; animation: screenIn .3s ease; }
 @keyframes screenIn {
   from { opacity: 0; transform: translateY(8px); }
@@ -5001,7 +5001,19 @@ function render() {
   // 4) Messages dynamiques (uniquement projection)
   detectDynEvents(data);
 
-  // 5) Rendu selon le rôle
+  // 5) Auto-reveal QCM : quand tous les joueurs ont répondu → révéler immédiatement
+  if (isHostLike() && data.mode === 'qcm' && data.round?.status === 'armed') {
+    const players = Object.values(data.players || {})
+      .filter(p => !p.isHost || !data.hostMode);
+    const totalAnswers = Object.keys(data.answers || {}).length;
+    if (players.length > 0 && totalAnswers >= players.length && !State._autoRevealing) {
+      State._autoRevealing = true;
+      revealAnswer().catch(() => {}).finally(() => { State._autoRevealing = false; });
+    }
+  }
+  if (data.round?.status !== 'armed') State._autoRevealing = false;
+
+  // 6) Rendu selon le rôle
   // role='projection' : seulement l'écran d'affichage public
   // role='host_player' : héberge ET joue → comme un joueur normal
   // role='player' : joueur classique
