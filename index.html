@@ -43,7 +43,7 @@
   --q4: #4be3b0;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html, body { height: 100%; overflow: hidden; }
+html { overflow-x: hidden; }
 body {
   font-family: 'Outfit', system-ui, sans-serif;
   background: var(--bg);
@@ -52,8 +52,11 @@ body {
   min-height: -webkit-fill-available;
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
-  overflow: hidden;
+  overflow-x: hidden;
+  /* Cacher le scrollbar sans bloquer le scroll */
+  scrollbar-width: none;
 }
+body::-webkit-scrollbar { display: none; }
 .app { min-height: 100vh; position: relative; }
 .bg {
   position: fixed; top: 0; left: 0;
@@ -80,7 +83,7 @@ body {
 /* ============================================================
    ÉCRANS
    ============================================================ */
-.screen { display: none; min-height: 100dvh; padding: 24px; overflow-y: auto; }
+.screen { display: none; min-height: 100dvh; padding: 24px; }
 .screen.active { display: block; animation: screenIn .3s ease; }
 @keyframes screenIn {
   from { opacity: 0; transform: translateY(8px); }
