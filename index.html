@@ -44,6 +44,10 @@
 }
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html { overflow-x: hidden; }
+
+/* Cacher toutes les scrollbars visuellement (scroll toujours fonctionnel) */
+* { scrollbar-width: none; }
+*::-webkit-scrollbar { display: none; }
 body {
   font-family: 'Outfit', system-ui, sans-serif;
   background: var(--bg);
@@ -53,10 +57,7 @@ body {
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
   overflow-x: hidden;
-  /* Cacher le scrollbar sans bloquer le scroll */
-  scrollbar-width: none;
 }
-body::-webkit-scrollbar { display: none; }
 .app { min-height: 100vh; position: relative; }
 .bg {
   position: fixed; top: 0; left: 0;
