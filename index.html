@@ -5012,7 +5012,18 @@ function render() {
     const totalAnswers = Object.keys(data.answers || {}).length;
     if (players.length > 0 && totalAnswers >= players.length && !State._autoRevealing) {
       State._autoRevealing = true;
-      revealAnswer().catch(() => {}).finally(() => { State._autoRevealing = false; });
+      revealAnswer().then(() => {
+        // Annuler le timeout normal du QCM loop pour ne pas doubler
+        if (State.qcmLoop?.nextStateTimeout) {
+          clearTimeout(State.qcmLoop.nextStateTimeout);
+          State.qcmLoop.nextStateTimeout = null;
+        }
+        // Passer à la question suivante après revealSec
+        State.qcmLoop.nextStateTimeout = setTimeout(() => {
+          if (!State.qcmLoop?.running) return;
+          nextQcmRound();
+        }, State.qcmConfig.revealSec * 1000);
+      }).catch(() => {}).finally(() => { State._autoRevealing = false; });
     }
   }
   if (data.round?.status !== 'armed') State._autoRevealing = false;
