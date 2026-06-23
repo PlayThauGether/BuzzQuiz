@@ -1741,6 +1741,11 @@ input.code-input {
         <!-- Timer 15s buzzer (visible seulement en mode buzzer) -->
         <div class="proj-buzzer-timer" id="proj-buzzer-timer">15</div>
 
+        <!-- Badge x2 -->
+        <div id="proj-double-badge" style="display:none; text-align:center; margin:4px 0;">
+          <span style="display:inline-block; background:linear-gradient(135deg,var(--gold),#ff9f4a); color:#1a0800; font-family:'Fraunces'; font-weight:900; font-size:28px; padding:6px 20px; border-radius:12px; letter-spacing:2px; box-shadow:0 4px 20px rgba(255,209,102,.4);">✨ DOUBLE POINTS x2 ✨</span>
+        </div>
+
         <div class="qcm-choices" id="proj-qcm-choices" style="display:none;"></div>
       </div>
 
@@ -1782,6 +1787,10 @@ input.code-input {
       </div>
 
       <div style="margin-top:16px; display:grid; gap:10px;">
+        <!-- Bouton x2 avant de lancer la question -->
+        <button class="btn" id="c-double" style="background:rgba(255,209,102,.15); border:2px solid var(--gold); color:var(--gold); font-family:'Fraunces'; font-weight:900; font-size:16px; letter-spacing:1px;">
+          ✨ Question x2 : OFF
+        </button>
         <button class="btn primary btn-xl" id="c-next">▶ Question suivante</button>
         <div class="btn-row">
           <button class="btn mint" id="c-reveal" disabled>✓ Bonne réponse</button>
@@ -2528,7 +2537,13 @@ function initFirebase() {
 
   onAuthStateChanged(auth, (user) => {
     if (!user) return;
-    State.uid = user.uid;
+    // Générer un uid de session unique PAR ONGLET pour éviter les conflits
+    // en navigation privée (deux onglets privés partagent parfois le même uid Firebase)
+    if (!State.uid) {
+      // On combine l'uid Firebase + un token aléatoire unique à cet onglet
+      const tabToken = Math.random().toString(36).slice(2, 8);
+      State.uid = user.uid + '_' + tabToken;
+    }
     onValue(ref(db, '.info/serverTimeOffset'), (snap) => {
       const v = snap.val();
       if (typeof v === 'number') State.clockOffset = v;
@@ -4345,6 +4360,10 @@ async function nextQuestion() {
     await remove(ref(db, 'rooms/' + State.roomCode + '/log')).catch(() => {});
   }
 
+  // Lire si la prochaine question est en double points
+  const doubleSnap = await get(ref(db, 'rooms/' + State.roomCode + '/doubleNext')).catch(() => null);
+  const isDouble = doubleSnap?.val() === true;
+
   // PUIS armer le nouveau round
   await set(ref(db, 'rooms/' + State.roomCode + '/round'), {
     status: 'armed',
@@ -4354,7 +4373,11 @@ async function nextQuestion() {
     answer: '',
     number: State.usedIndexes.size,
     openedAt: serverTimestamp(),
+    doublePoints: isDouble,
   });
+
+  // Effacer le flag doubleNext après l'avoir consommé
+  if (isDouble) await remove(ref(db, 'rooms/' + State.roomCode + '/doubleNext')).catch(() => {});
 
   const privateView = State.mode === 'qcm'
     ? { answer: shuffledChoices[shuffledCorrect], correctIndex: shuffledCorrect, question: q.q }
@@ -4411,10 +4434,9 @@ async function distributeScores() {
   if (!data) return;
   const qIdx = State.currentQuestionIndex;
   const logEntry = { qIdx, mode: State.mode, answers: {} };
+  const multiplier = data.round?.doublePoints ? 2 : 1;
 
   if (State.mode === 'qcm') {
-    // Lire l'index correct depuis round.correct (tient compte du mélange des choix)
-    // et non depuis State.playlist.questions[qIdx].correct (index original avant mélange)
     const correctIdx = data.round?.correct ?? State.latestPrivateView?.correctIndex ?? State.playlist.questions[qIdx].correct;
     const allAnswers = Object.entries(data.answers || {});
     const openedAt = data.round.openedAt;
@@ -4424,14 +4446,13 @@ async function distributeScores() {
       const isCorrect = ans.choice === correctIdx;
       const responseTime = Math.round(((ans.tapTime - openedAt) / 1000) * 10) / 10;
       const player = data.players?.[uid];
-      // Log
       logEntry.answers[uid] = {
         name: player?.name || uid, emoji: player?.emoji || '⚡',
         correct: isCorrect, responseTime, choice: ans.choice,
       };
       if (isCorrect && player) {
         const remaining = Math.max(0, timerSec - responseTime);
-        const pts = Math.round(50 + remaining * 10);
+        const pts = Math.round((50 + remaining * 10) * multiplier);
         const newScore = (player.score || 0) + pts;
         await update(ref(db, 'rooms/' + State.roomCode + '/players/' + uid), { score: newScore }).catch(() => {});
       }
@@ -4448,7 +4469,7 @@ async function distributeScores() {
         correct: true, rank: 1,
       };
       if (player) {
-        const newScore = (player.score || 0) + 100;
+        const newScore = (player.score || 0) + (100 * multiplier);
         await update(ref(db, 'rooms/' + State.roomCode + '/players/' + uid), { score: newScore }).catch(() => {});
       }
       // Mauvais buzzeurs
@@ -4789,6 +4810,18 @@ $('c-reveal').addEventListener('click', () => sendControlCmd('reveal'));
 $('c-replay').addEventListener('click', () => sendControlCmd('replay'));
 $('c-wrong').addEventListener('click', () => sendControlCmd('wrong'));
 
+// Bouton x2 Double Points
+let doubleActive = false;
+$('c-double').addEventListener('click', () => {
+  doubleActive = !doubleActive;
+  $('c-double').textContent = `✨ Question x2 : ${doubleActive ? 'ON 🔥' : 'OFF'}`;
+  $('c-double').style.background = doubleActive
+    ? 'linear-gradient(135deg,var(--gold),#ff9f4a)'
+    : 'rgba(255,209,102,.15)';
+  $('c-double').style.color = doubleActive ? '#1a0800' : 'var(--gold)';
+  sendControlCmd(doubleActive ? 'doublex2_on' : 'doublex2_off');
+});
+
 // ============================================================
 //  BONUS POINTS — panneau animateur
 // ============================================================
@@ -4833,14 +4866,29 @@ function renderBonusPlayers() {
 }
 
 async function giveBonus(uid, name, emoji, currentScore) {
+  // Le contrôle distant envoie une commande — c'est l'hôte qui exécute l'écriture Firebase
+  if (State.role === 'control') {
+    await sendControlCmd('bonus:' + uid + ':' + bonusAmount);
+    toast(`+${bonusAmount} pts → ${name}`);
+    return;
+  }
+  // L'hôte exécute directement
+  await giveBonusHost(uid, bonusAmount, name);
+}
+
+async function giveBonusHost(uid, amount, name) {
   if (!State.roomCode) return;
-  const newScore = currentScore + bonusAmount;
+  const data = State.lastState;
+  const player = data?.players?.[uid];
+  if (!player) return;
+  const currentScore = player.score || 0;
+  const newScore = currentScore + amount;
   try {
     await update(ref(db, 'rooms/' + State.roomCode + '/players/' + uid), { score: newScore });
-    showDynMsg(`🎁 <b>${escapeHtml(name || 'Joueur')}</b> +${bonusAmount} pts bonus !`, 2500);
-    toast(`+${bonusAmount} pts → ${name}`);
+    showDynMsg(`🎁 <b>${escapeHtml(player.name || name || 'Joueur')}</b> +${amount} pts bonus !`, 2500);
+    toast(`+${amount} pts → ${player.name || name}`);
     setTimeout(renderBonusPlayers, 400);
-  } catch(e) { toast('Erreur : ' + e.message); }
+  } catch(e) { toast('Erreur bonus : ' + e.message); }
 }
 
 async function sendControlCmd(name) {
@@ -4860,6 +4908,15 @@ async function handleControlCommand(name, ts) {
     if (name === 'reveal') await revealAnswer();
     if (name === 'replay') await replayCurrentQuestion();
     if (name === 'wrong')  await markWrongBuzzer();
+    // Commande bonus : format "bonus:UID:MONTANT"
+    if (name.startsWith('bonus:')) {
+      const [, uid, amtStr] = name.split(':');
+      const amt = parseInt(amtStr, 10);
+      if (uid && !isNaN(amt)) await giveBonusHost(uid, amt);
+    }
+    // Commande x2 toggle
+    if (name === 'doublex2_on')  await set(ref(db, 'rooms/' + State.roomCode + '/doubleNext'), true);
+    if (name === 'doublex2_off') await remove(ref(db, 'rooms/' + State.roomCode + '/doubleNext'));
   } catch (e) { console.error(e); }
 }
 
@@ -5122,8 +5179,55 @@ function renderProjection(data) {
   $('proj-qnumber').textContent = `Question ${played} / ${total}`;
   $('proj-progress').style.width = (total ? (100 * played / total) : 0) + '%';
 
-  if (round.question) $('proj-question').classList.remove('empty'), $('proj-question').textContent = round.question;
-  else $('proj-question').classList.add('empty'), $('proj-question').textContent = 'En attente…';
+  // Badge x2 double points
+  const doubleBadge = $('proj-double-badge');
+  doubleBadge.style.display = round.doublePoints ? '' : 'none';
+
+  // Effet machine à écrire pour la question (buzzer uniquement, QCM s'affiche direct)
+  const projQ = $('proj-question');
+  const questionKey = round.number + '_' + (round.openedAt || 0);
+  if (round.question && data.mode === 'buzzer' && round.status === 'armed') {
+    if (State._typewriterKey !== questionKey) {
+      State._typewriterKey = questionKey;
+      // Stopper l'animation précédente
+      if (State._typewriterTimer) { clearInterval(State._typewriterTimer); State._typewriterTimer = null; }
+      projQ.classList.remove('empty');
+      const full = round.question;
+      let idx = 0;
+      projQ.textContent = '';
+      State._typewriterTimer = setInterval(() => {
+        if (idx < full.length) {
+          projQ.textContent = full.slice(0, ++idx);
+        } else {
+          clearInterval(State._typewriterTimer);
+          State._typewriterTimer = null;
+        }
+      }, 28);
+    }
+  } else if (round.question) {
+    if (State._typewriterKey !== questionKey) {
+      State._typewriterKey = questionKey;
+      if (State._typewriterTimer) { clearInterval(State._typewriterTimer); State._typewriterTimer = null; }
+    }
+    projQ.classList.remove('empty');
+    projQ.textContent = round.question;
+  } else {
+    State._typewriterKey = null;
+    if (State._typewriterTimer) { clearInterval(State._typewriterTimer); State._typewriterTimer = null; }
+    projQ.classList.add('empty');
+    projQ.textContent = 'En attente…';
+  }
+
+  // Reset bouton x2 dans le contrôle si la question ne l'a plus
+  if (!round.doublePoints && doubleActive) {
+    doubleActive = false;
+    const btn = $('c-double');
+    if (btn) {
+      btn.textContent = '✨ Question x2 : OFF';
+      btn.style.background = 'rgba(255,209,102,.15)';
+      btn.style.color = 'var(--gold)';
+    }
+  }
 
   // Timer buzzer 15s sur la projection
   const projTimer = $('proj-buzzer-timer');
@@ -5133,9 +5237,10 @@ function renderProjection(data) {
     const questionKey = round.number + '_' + round.openedAt;
     if (State._lastBuzzerQuestion !== questionKey) {
       State._lastBuzzerQuestion = questionKey;
-      stopBuzzerTimer();  // reset l'intervalle pour la nouvelle question
+      stopBuzzerTimer();
     }
-    updateBuzzerProjTimer(round.openedAt);
+    // Pas de timer en mode buzzer — l'animateur révèle manuellement
+    projTimer.style.display = 'none';
   } else {
     projTimer.style.display = 'none';
     stopBuzzerTimer();
@@ -5320,22 +5425,10 @@ function renderPlayerBuzzer(data) {
   const myWrongTs = wrongBuzzes[State.uid];
   const COOLDOWN_MS = 5000;
 
-  // Timer 15s : visible quand la question est armée
+  // Pas de timer en mode buzzer — masquer et arrêter
   const timerWrap = $('p-buzzer-timer-wrap');
-  if (round.status === 'armed' && round.openedAt) {
-    timerWrap.style.display = '';
-    // Nouvelle question → reset
-    const questionKey = round.number + '_' + round.openedAt;
-    if (State._lastBuzzerQuestionPlayer !== questionKey) {
-      State._lastBuzzerQuestionPlayer = questionKey;
-      stopBuzzerPlayerTimer();
-    }
-    updateBuzzerPlayerTimer(round.openedAt);
-  } else {
-    timerWrap.style.display = 'none';
-    stopBuzzerPlayerTimer();
-    State._lastBuzzerQuestionPlayer = null;
-  }
+  timerWrap.style.display = 'none';
+  stopBuzzerPlayerTimer();
 
   // Cooldown : le joueur a buzzé mais sa réponse était mauvaise
   const now = serverNow();
