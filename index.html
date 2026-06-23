@@ -337,6 +337,12 @@ input.code-input {
 .team-color-3 { --team-c: #ffd166; --team-cd: #3a2b06; }   /* jaune */
 .team-color-4 { --team-c: #b58dff; --team-cd: #1b0e3a; }   /* violet */
 .team-color-5 { --team-c: #ff9f4a; --team-cd: #3a1d05; }   /* orange */
+.team-color-6 { --team-c: #00d4ff; --team-cd: #003a47; }   /* cyan */
+.team-color-7 { --team-c: #ff6bdf; --team-cd: #3a0630; }   /* rose */
+.team-color-8 { --team-c: #a8ff3e; --team-cd: #1a3000; }   /* vert lime */
+.team-color-9 { --team-c: #ff4444; --team-cd: #3a0000; }   /* rouge vif */
+.team-color-10 { --team-c: #ffd700; --team-cd: #3a2e00; }  /* or */
+.team-color-11 { --team-c: #c0c0c0; --team-cd: #1a1a1a; }  /* argent */
 
 /* Badges d'équipe dans les listes */
 .team-badge {
@@ -375,13 +381,20 @@ input.code-input {
 
 /* Inputs pour nommer les équipes côté création */
 .team-name-input-row {
-  display: inline; margin-top: 6px;
+  display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
 }
 .team-name-input-row .team-color-chip {
   width: 24px; height: 24px; border-radius: 50%;
   background: var(--team-c); flex: none;
 }
 .team-name-input-row input { flex: 1; padding: 10px 14px; font-size: 15px; }
+.team-del-btn {
+  width: 30px; height: 30px; border-radius: 8px; border: none; flex: none;
+  background: rgba(255,92,122,.2); color: var(--accent); cursor: pointer; font-size: 14px;
+  display: grid; place-items: center; transition: background .15s;
+}
+.team-del-btn:hover { background: var(--accent); color: #fff; }
+.team-del-btn:disabled { opacity: .3; cursor: not-allowed; pointer-events: none; }
 
 /* Scoreboard / podium en mode équipes */
 .team-score-row {
@@ -825,6 +838,25 @@ input.code-input {
 
 /* Bouton "Mauvaise réponse" sur contrôle + hôte */
 .btn-wrong { background: rgba(255,92,122,.18); color: var(--accent); border: 1px solid var(--accent); }
+
+/* Bonus points */
+.bonus-amt-btn {
+  flex: 1; padding: 8px; border-radius: 8px; border: 2px solid var(--line);
+  background: var(--bg-soft); color: var(--ink); font-family: 'Fraunces';
+  font-weight: 900; font-size: 15px; cursor: pointer; transition: all .15s;
+}
+.bonus-amt-btn.active { border-color: var(--gold); background: rgba(255,209,102,.15); color: var(--gold); }
+.bonus-player-btn {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line);
+  background: var(--panel); cursor: pointer; transition: border-color .15s, background .15s;
+  font-family: 'Outfit'; font-size: 14px; width: 100%;
+}
+.bonus-player-btn:hover { border-color: var(--gold); background: rgba(255,209,102,.08); }
+.bonus-player-btn .bp-emoji { font-size: 22px; }
+.bonus-player-btn .bp-name { flex: 1; font-weight: 700; text-align: left; }
+.bonus-player-btn .bp-score { font-family: 'Fraunces'; font-weight: 900; color: var(--accent-2); font-size: 15px; }
+.bonus-player-btn .bp-add { color: var(--gold); font-weight: 800; font-size: 13px; }
 .btn-wrong:hover { background: var(--accent); color: #fff; }
 
 .buzzer-zone { flex: 1; display: grid; place-items: center; padding: 16px 0; }
@@ -1407,6 +1439,9 @@ input.code-input {
         <button class="option-btn active" data-val="10">10</button>
         <button class="option-btn" data-val="15">15</button>
         <button class="option-btn" data-val="20">20</button>
+        <button class="option-btn" data-val="30">30</button>
+        <button class="option-btn" data-val="40">40</button>
+        <button class="option-btn" data-val="50">50</button>
         <button class="option-btn" data-val="0">Toutes</button>
       </div>
 
@@ -1463,6 +1498,16 @@ input.code-input {
              background:var(--bg-soft); border:1px solid var(--accent-2); border-radius:12px;">
           <span id="soiree-summary-text" style="font-size:13px; color:var(--accent-2); font-weight:700;"></span>
         </div>
+        <!-- Anti-répétition entre parties -->
+        <div style="margin-top:12px; padding:12px 14px; background:rgba(6,214,160,.08); border:1px solid rgba(6,214,160,.3); border-radius:12px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+            <div>
+              <div style="font-weight:700; font-size:13px; color:var(--mint);">🔁 Anti-répétition soirée</div>
+              <div class="muted" style="font-size:12px; margin-top:2px;" id="soiree-memory-status">Aucune question mémorisée</div>
+            </div>
+            <button class="btn ghost" style="font-size:12px; padding:6px 12px;" id="btn-reset-soiree-memory">🗑 Réinitialiser</button>
+          </div>
+        </div>
       </div>
 
       <!-- Mode équipes -->
@@ -1484,16 +1529,12 @@ input.code-input {
       </div>
       <p class="muted" id="tts-note" style="font-size:12px; margin-top:6px; display:none;"></p>
       <div id="teams-config" style="display:none; margin-top:14px;">
-        <label>Nombre d'équipes</label>
-        <div class="option-group" id="opt-nb-teams">
-          <button class="option-btn active" data-val="2">2</button>
-          <button class="option-btn" data-val="3">3</button>
-          <button class="option-btn" data-val="4">4</button>
-          <button class="option-btn" data-val="5">5</button>
-          <button class="option-btn" data-val="6">6</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <label style="margin:0;">Équipes <span id="teams-count-badge" style="color:var(--gold); font-family:'Fraunces'; font-weight:900; font-size:15px; margin-left:6px;">2</span></label>
+          <button class="btn ghost" style="font-size:12px; padding:6px 12px;" id="btn-add-team">➕ Ajouter</button>
         </div>
-        <label>Noms des équipes (optionnel)</label>
         <div id="teams-names"></div>
+        <p class="muted" style="font-size:11px; margin-top:6px;">Min 2, max 12 équipes. Noms optionnels.</p>
       </div>
 
       <div style="height:24px;"></div>
@@ -1748,7 +1789,22 @@ input.code-input {
         </div>
         <div class="btn-row">
           <button class="btn ghost" id="c-replay" disabled>↺ Rejouer</button>
+          <button class="btn" style="background:var(--gold);color:#1a0800;" id="c-bonus">🎁 Bonus</button>
         </div>
+      </div>
+
+      <!-- Panneau bonus points -->
+      <div id="bonus-panel" style="display:none; margin-top:14px; padding:14px; background:var(--bg-soft); border:2px solid var(--gold); border-radius:14px;">
+        <div style="font-size:13px; font-weight:700; color:var(--gold); margin-bottom:10px;">🎁 Attribuer des points bonus</div>
+        <div style="font-size:11px; color:var(--ink-dim); margin-bottom:10px; text-transform:uppercase; letter-spacing:1px; font-weight:700;">Montant</div>
+        <div class="btn-row" style="margin-bottom:12px;" id="bonus-amounts">
+          <button class="bonus-amt-btn active" data-pts="50">+50</button>
+          <button class="bonus-amt-btn" data-pts="100">+100</button>
+          <button class="bonus-amt-btn" data-pts="150">+150</button>
+          <button class="bonus-amt-btn" data-pts="200">+200</button>
+        </div>
+        <div style="font-size:11px; color:var(--ink-dim); margin-bottom:8px; text-transform:uppercase; letter-spacing:1px; font-weight:700;">Joueur</div>
+        <div id="bonus-players-list" style="display:flex; flex-direction:column; gap:6px;"></div>
       </div>
 
       <!-- Qui a buzzé -->
@@ -2160,6 +2216,7 @@ const State = {
   playlist: null,
   selectedPlaylistData: null,
   soireeSelectedIds: new Set(),
+  soireePlaylistId: null,
   ttsEnabled: false, // ids des playlists sélectionnées en mode soirée
   hostMode: true,   // true = écran d'affichage public ; false = l'hôte joue aussi
   isRestartMode: false,
@@ -2541,6 +2598,68 @@ function clearRoomCode() {
 }
 
 initFirebase();
+
+// ============================================================
+//  MÉMOIRE SOIRÉE — anti-répétition questions entre parties
+//  Stocke les indices de questions utilisées par playlist
+//  dans localStorage pour persister entre parties.
+// ============================================================
+const SOIREE_MEMORY_KEY = 'buzzquiz_soiree_memory';
+
+function getSoireeMemory() {
+  try { return JSON.parse(localStorage.getItem(SOIREE_MEMORY_KEY) || '{}'); }
+  catch { return {}; }
+}
+
+function saveSoireeMemory(mem) {
+  localStorage.setItem(SOIREE_MEMORY_KEY, JSON.stringify(mem));
+}
+
+// Marquer des indices comme utilisés pour une playlist donnée
+function markQuestionsUsed(playlistId, indices) {
+  if (!playlistId || !indices.size) return;
+  const mem = getSoireeMemory();
+  if (!mem[playlistId]) mem[playlistId] = [];
+  indices.forEach(i => { if (!mem[playlistId].includes(i)) mem[playlistId].push(i); });
+  saveSoireeMemory(mem);
+}
+
+// Obtenir les indices déjà utilisés pour une playlist
+function getUsedIndices(playlistId) {
+  if (!playlistId) return new Set();
+  const mem = getSoireeMemory();
+  return new Set(mem[playlistId] || []);
+}
+
+// Réinitialiser la mémoire soirée
+function resetSoireeMemory() {
+  localStorage.removeItem(SOIREE_MEMORY_KEY);
+  updateSoireeMemoryStatus();
+  toast('🔁 Mémoire soirée réinitialisée !');
+}
+
+function updateSoireeMemoryStatus() {
+  const el = $('soiree-memory-status');
+  if (!el) return;
+  const mem = getSoireeMemory();
+  const keys = Object.keys(mem);
+  if (!keys.length) {
+    el.textContent = 'Aucune question mémorisée — nouvelle soirée';
+    return;
+  }
+  const total = keys.reduce((s, k) => s + (mem[k]?.length || 0), 0);
+  el.textContent = `${total} questions déjà jouées mémorisées sur ${keys.length} playlist(s)`;
+}
+
+$('btn-reset-soiree-memory').addEventListener('click', () => {
+  if (!confirm('Réinitialiser la mémoire soirée ? Les questions pourront retomber lors de la prochaine partie.')) return;
+  resetSoireeMemory();
+});
+
+// Mettre à jour le statut à chaque fois qu'on affiche la section soirée
+$('opt-soiree-toggle').addEventListener('click', () => {
+  setTimeout(updateSoireeMemoryStatus, 50);
+});
 
 // ============================================================
 //  BLOQUER RAFRAÎCHISSEMENT ET RETOUR EN COURS DE PARTIE
@@ -3072,7 +3191,9 @@ function startCreate(mode) {
   // Reset équipes
   $('opt-teams-toggle').classList.remove('on');
   $('teams-config').style.display = 'none';
-  renderTeamNameInputs(2);
+  // Reset équipes : repartir avec 2 équipes vides
+  $('teams-names').innerHTML = '';
+  addTeamRow(); addTeamRow();
 
   // Reset mode soirée
   $('opt-soiree-toggle').classList.remove('on');
@@ -3184,7 +3305,7 @@ setupOptionGroup('opt-nb-questions', () => {
 });
 setupOptionGroup('opt-timer');
 setupOptionGroup('opt-reveal');
-setupOptionGroup('opt-nb-teams', (val) => renderTeamNameInputs(parseInt(val, 10)));
+// opt-nb-teams supprimé — système dynamique
 
 // Toggle équipes
 $('opt-teams-toggle').addEventListener('click', () => {
@@ -3331,18 +3452,62 @@ function updateSoireeSummary() {
 }
 
 // Génère les inputs de nom d'équipe
-function renderTeamNameInputs(nb) {
+const MAX_TEAMS = 12;
+
+function renderTeams() {
   const wrap = $('teams-names');
-  let html = '';
-  for (let i = 0; i < nb; i++) {
-    html += `<div class="team-name-input-row team-color-${i}">
-      <div class="team-color-chip"></div>
-      <input type="text" maxlength="20" placeholder="${TEAM_DEFAULT_NAMES[i]}" data-team-idx="${i}" />
-    </div>`;
-  }
-  wrap.innerHTML = html;
+  const rows = wrap.querySelectorAll('.team-name-input-row');
+  const nb = rows.length;
+  // Mettre à jour le badge compteur
+  $('teams-count-badge').textContent = nb;
+  // Activer/désactiver les boutons de suppression (min 2 équipes)
+  rows.forEach(row => {
+    const btn = row.querySelector('.team-del-btn');
+    if (btn) btn.disabled = nb <= 2;
+  });
 }
-renderTeamNameInputs(2);
+
+function addTeamRow(name = '') {
+  const wrap = $('teams-names');
+  const nb = wrap.querySelectorAll('.team-name-input-row').length;
+  if (nb >= MAX_TEAMS) { toast(`Maximum ${MAX_TEAMS} équipes`); return; }
+  const colorIdx = nb % 12; // cycle sur les 12 couleurs
+  const defaultName = TEAM_DEFAULT_NAMES[nb] || `Équipe ${nb + 1}`;
+  const row = document.createElement('div');
+  row.className = `team-name-input-row team-color-${colorIdx}`;
+  row.dataset.idx = nb;
+  row.innerHTML = `
+    <div class="team-color-chip"></div>
+    <input type="text" maxlength="20" placeholder="${defaultName}" value="${name}" data-team-idx="${nb}">
+    <button class="team-del-btn" title="Supprimer cette équipe">✕</button>
+  `;
+  row.querySelector('.team-del-btn').addEventListener('click', () => {
+    row.remove();
+    reindexTeams();
+    renderTeams();
+  });
+  wrap.appendChild(row);
+  renderTeams();
+}
+
+function reindexTeams() {
+  const rows = $('teams-names').querySelectorAll('.team-name-input-row');
+  rows.forEach((row, i) => {
+    const colorIdx = i % 12;
+    row.className = `team-name-input-row team-color-${colorIdx}`;
+    row.dataset.idx = i;
+    const input = row.querySelector('input');
+    if (input) {
+      input.dataset.teamIdx = i;
+      if (!input.value) input.placeholder = TEAM_DEFAULT_NAMES[i] || `Équipe ${i + 1}`;
+    }
+  });
+}
+
+// Init : 2 équipes par défaut
+addTeamRow(); addTeamRow();
+
+$('btn-add-team').addEventListener('click', () => addTeamRow());
 
 function getActiveOption(groupId, fallback) {
   const a = document.querySelector('#' + groupId + ' .option-btn.active');
@@ -3454,6 +3619,8 @@ $('create-launch').addEventListener('click', async () => {
       State.usedIndexes = new Set();
       State.currentQuestionIndex = -1;
       State.qcmConfig.nbQuestions = merged.questions.length;
+      // ID soirée = combinaison des IDs de playlists sélectionnées (pour la mémoire anti-répétition)
+      State.soireePlaylistId = [...State.soireeSelectedIds].sort().join('_');
     } catch (e) {
       toast("Erreur : " + e.message);
       return;
@@ -3482,13 +3649,15 @@ $('create-launch').addEventListener('click', async () => {
   // Config équipes
   const teamsOn = $('opt-teams-toggle').classList.contains('on');
   if (teamsOn) {
-    const nbTeams = getActiveOption('opt-nb-teams', 2);
+    const rows = $('teams-names').querySelectorAll('.team-name-input-row');
+    if (rows.length < 2) { toast('Il faut au moins 2 équipes'); return; }
     const teams = [];
-    for (let i = 0; i < nbTeams; i++) {
-      const input = document.querySelector('#teams-names input[data-team-idx="' + i + '"]');
-      const name = (input?.value || '').trim() || TEAM_DEFAULT_NAMES[i];
-      teams.push({ id: i, name, colorIdx: i });
-    }
+    rows.forEach((row, i) => {
+      const input = row.querySelector('input');
+      const name = (input?.value || '').trim() || TEAM_DEFAULT_NAMES[i] || `Équipe ${i + 1}`;
+      const colorIdx = i % 12;
+      teams.push({ id: i, name, colorIdx });
+    });
     State.teamsConfig = { enabled: true, list: teams };
   } else {
     State.teamsConfig = { enabled: false, list: [] };
@@ -3658,6 +3827,12 @@ async function createRoom() {
 async function restartRoom() {
   if (!State.roomCode) throw new Error('Pas de salle active');
   const code = State.roomCode;
+
+  // Sauvegarder les questions jouées dans la mémoire soirée avant le restart
+  if (State.soireePlaylistId && State.usedIndexes.size > 0) {
+    markQuestionsUsed(State.soireePlaylistId, State.usedIndexes);
+    updateSoireeMemoryStatus();
+  }
 
   // Reset de l'état hôte
   State.isRestartMode = false;
@@ -4124,11 +4299,15 @@ async function nextQuestion() {
   resetBuzzSound();
   resumeMusicAfterBuzz();
 
+  // Exclure les questions déjà jouées dans cette partie ET dans les parties précédentes
+  const soireeUsed = State.soireePlaylistId ? getUsedIndices(State.soireePlaylistId) : new Set();
   const remaining = State.playlist.questions
     .map((_, i) => i)
-    .filter((i) => !State.usedIndexes.has(i));
+    .filter((i) => !State.usedIndexes.has(i) && !soireeUsed.has(i));
 
   if (!remaining.length || State.usedIndexes.size >= State.qcmConfig.nbQuestions) {
+    // Sauvegarder les questions jouées dans la mémoire soirée avant de terminer
+    if (State.soireePlaylistId) markQuestionsUsed(State.soireePlaylistId, State.usedIndexes);
     await finishGame();
     return;
   }
@@ -4610,6 +4789,60 @@ $('c-reveal').addEventListener('click', () => sendControlCmd('reveal'));
 $('c-replay').addEventListener('click', () => sendControlCmd('replay'));
 $('c-wrong').addEventListener('click', () => sendControlCmd('wrong'));
 
+// ============================================================
+//  BONUS POINTS — panneau animateur
+// ============================================================
+let bonusAmount = 50;
+let bonusPanelOpen = false;
+
+$('c-bonus').addEventListener('click', () => {
+  bonusPanelOpen = !bonusPanelOpen;
+  $('bonus-panel').style.display = bonusPanelOpen ? '' : 'none';
+  if (bonusPanelOpen) renderBonusPlayers();
+});
+
+$('bonus-amounts').addEventListener('click', (e) => {
+  const btn = e.target.closest('.bonus-amt-btn');
+  if (!btn) return;
+  bonusAmount = parseInt(btn.dataset.pts);
+  $('bonus-amounts').querySelectorAll('.bonus-amt-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderBonusPlayers();
+});
+
+function renderBonusPlayers() {
+  const data = State.lastState;
+  const list = $('bonus-players-list');
+  if (!data?.players) { list.innerHTML = '<p class="muted">Aucun joueur</p>'; return; }
+  const players = Object.entries(data.players)
+    .map(([uid, p]) => ({ uid, ...p }))
+    .sort((a, b) => (b.score || 0) - (a.score || 0));
+  list.innerHTML = '';
+  players.forEach(p => {
+    const btn = document.createElement('button');
+    btn.className = 'bonus-player-btn';
+    btn.innerHTML = `
+      <span class="bp-emoji">${p.emoji || '⚡'}</span>
+      <span class="bp-name">${escapeHtml(p.name || 'Joueur')}</span>
+      <span class="bp-score">${p.score || 0} pts</span>
+      <span class="bp-add">+${bonusAmount} 🎁</span>
+    `;
+    btn.addEventListener('click', () => giveBonus(p.uid, p.name, p.emoji, p.score || 0));
+    list.appendChild(btn);
+  });
+}
+
+async function giveBonus(uid, name, emoji, currentScore) {
+  if (!State.roomCode) return;
+  const newScore = currentScore + bonusAmount;
+  try {
+    await update(ref(db, 'rooms/' + State.roomCode + '/players/' + uid), { score: newScore });
+    showDynMsg(`🎁 <b>${escapeHtml(name || 'Joueur')}</b> +${bonusAmount} pts bonus !`, 2500);
+    toast(`+${bonusAmount} pts → ${name}`);
+    setTimeout(renderBonusPlayers, 400);
+  } catch(e) { toast('Erreur : ' + e.message); }
+}
+
 async function sendControlCmd(name) {
   if (State.role !== 'control' || !State.roomCode) return;
   await set(ref(db, 'rooms/' + State.roomCode + '/cmd'), {
@@ -5005,6 +5238,8 @@ function renderControl(data) {
   }
 
   renderScoreboard('c-scores', data);
+  // Rafraîchir le panneau bonus si ouvert
+  if (bonusPanelOpen) renderBonusPlayers();
 }
 
 // ---- RENDU JOUEUR (en jeu) ----
