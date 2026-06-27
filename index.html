@@ -4721,6 +4721,14 @@ function setupQcmPlayerGrid() {
     btn.innerHTML = `<span class="qcm-letter">${['A','B','C','D'][i]}</span><span class="qcm-text">…</span>`;
     btn.addEventListener('click', async () => {
       if (!State.roomCode || !isPlayerLike()) return;
+      // Stopper le typewriter et afficher la question complète quand on répond
+      if (State._playerTypewriterTimer) {
+        clearInterval(State._playerTypewriterTimer);
+        State._playerTypewriterTimer = null;
+      }
+      if (State.lastState?.round?.question) {
+        $('p-qcm-question').textContent = State.lastState.round.question;
+      }
       const tapTime = serverNow();
       try {
         await set(ref(db, 'rooms/' + State.roomCode + '/answers/' + State.uid), {
@@ -5626,7 +5634,34 @@ function renderPlayerQcm(data) {
   const round = data.round;
   const grid = $('p-qcm-grid');
   const myAnswer = data.answers?.[State.uid];
-  $('p-qcm-question').textContent = round.question || 'En attente…';
+
+  // Effet machine à écrire sur la question (uniquement quand armée, pas encore répondu)
+  const qEl = $('p-qcm-question');
+  const questionKey = (round.number || 0) + '_' + (round.openedAt || 0);
+  if (round.question && round.status === 'armed' && !myAnswer) {
+    if (State._playerTypewriterKey !== questionKey) {
+      State._playerTypewriterKey = questionKey;
+      if (State._playerTypewriterTimer) { clearInterval(State._playerTypewriterTimer); State._playerTypewriterTimer = null; }
+      const full = round.question;
+      let idx = 0;
+      qEl.textContent = '';
+      State._playerTypewriterTimer = setInterval(() => {
+        if (idx < full.length) {
+          qEl.textContent = full.slice(0, ++idx);
+        } else {
+          clearInterval(State._playerTypewriterTimer);
+          State._playerTypewriterTimer = null;
+        }
+      }, 28);
+    }
+  } else {
+    // Révélation ou déjà répondu : afficher la question complète
+    if (State._playerTypewriterKey !== questionKey || round.status === 'revealed') {
+      State._playerTypewriterKey = questionKey;
+      if (State._playerTypewriterTimer) { clearInterval(State._playerTypewriterTimer); State._playerTypewriterTimer = null; }
+      qEl.textContent = round.question || 'En attente…';
+    }
+  }
 
   // Numéro de question
   const total = data.nbQuestions || 10;
