@@ -1522,6 +1522,7 @@ input.code-input {
         <label>Durée par question</label>
         <div class="option-group" id="opt-timer">
           <button class="option-btn" data-val="15">15 s</button>
+          <button class="option-btn" data-val="20">20 s</button>
           <button class="option-btn active" data-val="30">30 s</button>
           <button class="option-btn" data-val="45">45 s</button>
           <button class="option-btn" data-val="60">60 s</button>
@@ -5613,6 +5614,18 @@ function renderControl(data) {
   const round = data.round || { status: 'idle' };
   const total = data.nbQuestions || 10;
   const played = round.number || 0;
+
+  // Détecter si le timer vient d'expirer côté contrôle distant
+  if (data.mode === 'qcm' && round.status === 'armed' && round.openedAt && data.timer) {
+    const elapsed = (serverNow() - round.openedAt) / 1000;
+    const remaining = data.timer - elapsed;
+    if (remaining <= 0 && !State._controlTimerFiniShown) {
+      State._controlTimerFiniShown = true;
+      showTimerFini();
+    }
+  }
+  // Reset quand la question change
+  if (round.status !== 'armed') State._controlTimerFiniShown = false;
 
   const st = $('c-status'), txt = $('c-status-txt');
   st.className = 'status-tag status-' + round.status;
