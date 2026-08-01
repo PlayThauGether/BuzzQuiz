@@ -8,7 +8,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="app-version" content="7.0">
-<title>BuzzQuiz ⚡ </title>
+<title>BuzzQuiz ⚡</title>
 <link rel="manifest" href="./manifest.webmanifest" />
 <link rel="icon" type="image/png" href="./favicon.png">
 <link rel="apple-touch-icon" href="./favicon.png">
@@ -990,6 +990,31 @@ input.code-input {
 .p-qcm-timer .p-cd-lbl { font-family: 'Outfit'; font-size: 11px; color: var(--ink-dim); font-weight: 700; }
 .p-qcm-timer.warn .p-cd-num { color: var(--accent-2); }
 .p-qcm-timer.danger .p-cd-num { color: var(--accent); animation: pulse 0.6s infinite; }
+
+/* Bandeau Timer Fini */
+.timer-fini-banner {
+  position: fixed; inset: 0; z-index: 8000;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+}
+.timer-fini-banner.hidden { display: none; }
+.timer-fini-inner {
+  background: rgba(255,92,122,.92);
+  border: 4px solid #fff;
+  border-radius: 20px;
+  padding: 20px 48px;
+  font-family: 'Fraunces'; font-weight: 900;
+  font-size: clamp(36px, 8vw, 72px);
+  color: #fff;
+  letter-spacing: 2px;
+  text-shadow: 0 4px 20px rgba(0,0,0,.4);
+  animation: timerFiniPop .3s ease;
+}
+@keyframes timerFiniPop {
+  0% { transform: scale(.6); opacity: 0; }
+  70% { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
+}
 
 .p-timer-bar {
   height: 6px; background: var(--bg-soft); border-radius: 999px;
@@ -2213,6 +2238,11 @@ input.code-input {
 <div class="toast" id="toast"></div>
 <div class="dyn-msg" id="dyn-msg"></div>
 
+<!-- Bandeau Timer Fini -->
+<div class="timer-fini-banner hidden" id="timer-fini-banner">
+  <div class="timer-fini-inner">⏱ TEMPS ÉCOULÉ !</div>
+</div>
+
 <!-- Audio — un seul élément actif à la fois pour éviter les chevauchements iOS -->
 <audio id="bg-audio" loop preload="none"></audio>
 
@@ -3164,6 +3194,17 @@ function updateMusicForScreen(screenId) {
     default:
       break;
   }
+}
+
+let _timerFiniTimeout = null;
+function showTimerFini() {
+  $('timer-fini-banner').classList.remove('hidden');
+  if (_timerFiniTimeout) clearTimeout(_timerFiniTimeout);
+  _timerFiniTimeout = setTimeout(() => hideTimerFini(), 3000);
+}
+function hideTimerFini() {
+  $('timer-fini-banner').classList.add('hidden');
+  if (_timerFiniTimeout) { clearTimeout(_timerFiniTimeout); _timerFiniTimeout = null; }
 }
 
 // Boutons modale contrôle distant
@@ -4487,6 +4528,7 @@ async function nextQuestion() {
   stopBuzzerTimer();
   resetBuzzSound();
   resumeMusicAfterBuzz();
+  hideTimerFini();
 
   // Exclure les questions déjà jouées dans cette partie ET dans les parties précédentes
   const soireeUsed = State.soireePlaylistId ? getUsedIndices(State.soireePlaylistId) : new Set();
@@ -4607,6 +4649,7 @@ async function revealAnswer() {
   await update(ref(db, 'rooms/' + State.roomCode + '/round'), upd);
 
   resumeMusicAfterBuzz();
+  hideTimerFini();
   await distributeScores();
 }
 
@@ -4755,6 +4798,7 @@ async function nextQcmRound() {
     if (remaining <= 0) {
       clearInterval(State.qcmLoop.countdownInterval);
       State.qcmLoop.countdownInterval = null;
+      showTimerFini();
     }
   }, 200);
 
@@ -5120,7 +5164,30 @@ async function handleControlCommand(name, ts) {
   if (!ts || ts <= lastCmdTs) return;
   lastCmdTs = ts;
   try {
-    if (name === 'next')   await nextQuestion();
+  if (name === 'next') {
+    await nextQuestion();
+    // Mode présentiel : démarrer le countdown manuellement (pas de startQcmLoop)
+    if (State.presentielMode && State.mode === 'qcm') {
+      const total = State.qcmConfig.timerSec;
+      State.qcmLoop = State.qcmLoop || {};
+      State.qcmLoop.running = true;
+      $('proj-countdown').style.display = '';
+      $('proj-timer-bar').style.display = '';
+      State.qcmLoop.startedAt = Date.now();
+      updateProjCountdown(total, total);
+      if (State.qcmLoop.countdownInterval) clearInterval(State.qcmLoop.countdownInterval);
+      State.qcmLoop.countdownInterval = setInterval(() => {
+        const elapsed = (Date.now() - State.qcmLoop.startedAt) / 1000;
+        const remaining = total - elapsed;
+        updateProjCountdown(remaining, total);
+        if (remaining <= 0) {
+          clearInterval(State.qcmLoop.countdownInterval);
+          State.qcmLoop.countdownInterval = null;
+          showTimerFini();
+        }
+      }, 200);
+    }
+  }
     if (name === 'reveal') await revealAnswer();
     if (name === 'replay') await replayCurrentQuestion();
     if (name === 'wrong')  await markWrongBuzzer();
