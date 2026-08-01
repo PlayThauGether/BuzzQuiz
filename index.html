@@ -8,8 +8,10 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="app-version" content="7.0">
-<title>BuzzQuiz ⚡</title>
+<title>BuzzQuiz ⚡ </title>
 <link rel="manifest" href="./manifest.webmanifest" />
+<link rel="icon" type="image/png" href="./favicon.png">
+<link rel="apple-touch-icon" href="./favicon.png">
 <meta name="theme-color" content="#0d0b1f">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -881,6 +883,29 @@ input.code-input {
 .bonus-player-btn .bp-name { flex: 1; font-weight: 700; text-align: left; }
 .bonus-player-btn .bp-score { font-family: 'Fraunces'; font-weight: 900; color: var(--accent-2); font-size: 15px; }
 .bonus-player-btn .bp-add { color: var(--gold); font-weight: 800; font-size: 13px; }
+
+/* Mode présentiel */
+.presentiel-player-row {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: 10px; padding: 8px 10px;
+}
+.presentiel-player-row .pp-emoji { font-size: 20px; flex: none; }
+.presentiel-player-row input { flex: 1; background: transparent; border: none; color: var(--ink); font-size: 14px; font-weight: 700; outline: none; font-family: 'Outfit'; }
+.presentiel-player-row .pp-del { background: rgba(255,92,122,.2); border: none; color: var(--accent); width: 26px; height: 26px; border-radius: 6px; cursor: pointer; font-size: 12px; flex: none; }
+.presentiel-player-row .pp-del:hover { background: var(--accent); color: #fff; }
+.presentiel-validate-btn {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 10px;
+  border: 1px solid var(--line); background: var(--panel);
+  cursor: pointer; width: 100%; font-family: 'Outfit'; font-size: 14px;
+  color: var(--ink); transition: border-color .15s, background .15s;
+}
+.presentiel-validate-btn:hover { border-color: var(--mint); background: rgba(6,214,160,.08); }
+.presentiel-validate-btn .pv-emoji { font-size: 22px; }
+.presentiel-validate-btn .pv-name { flex: 1; font-weight: 700; text-align: left; }
+.presentiel-validate-btn .pv-score { font-family: 'Fraunces'; font-weight: 900; color: var(--accent-2); font-size: 14px; }
+.presentiel-validate-btn .pv-pts { color: var(--mint); font-weight: 800; font-size: 12px; }
 .btn-wrong:hover { background: var(--accent); color: #fff; }
 
 .buzzer-zone { flex: 1; display: grid; place-items: center; padding: 16px 0; }
@@ -1550,6 +1575,35 @@ input.code-input {
         <div class="toggle-switch" id="opt-tts-toggle"></div>
       </div>
       <p class="muted" id="tts-note" style="font-size:12px; margin-top:6px; display:none;"></p>
+
+      <!-- Mode Difficile (sans choix) -->
+      <div class="toggle-row" style="margin-top:14px;">
+        <div>
+          <div class="toggle-label">💀 Mode difficile</div>
+          <div class="toggle-desc">La question s'affiche sans les 4 choix — pas d'aide sur les réponses</div>
+        </div>
+        <div class="toggle-switch" id="opt-hard-toggle"></div>
+      </div>
+
+      <!-- Mode Présentiel -->
+      <div class="toggle-row" style="margin-top:14px;">
+        <div>
+          <div class="toggle-label">🖊️ Mode présentiel</div>
+          <div class="toggle-desc">Les joueurs n'utilisent pas l'app — tableaux blancs, oral. Tu gères les points manuellement.</div>
+        </div>
+        <div class="toggle-switch" id="opt-presentiel-toggle"></div>
+      </div>
+
+      <!-- Section joueurs présentiel -->
+      <div id="presentiel-players-config" style="display:none; margin-top:14px; padding:14px; background:var(--bg-soft); border:1px solid rgba(255,209,102,.25); border-radius:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <label style="margin:0; color:var(--gold);">👥 Joueurs <b id="presentiel-count">0</b></label>
+          <button class="btn ghost" style="font-size:12px; padding:6px 12px;" id="btn-add-presentiel-player">➕ Ajouter</button>
+        </div>
+        <div id="presentiel-players-list" style="display:flex; flex-direction:column; gap:6px;"></div>
+        <p class="muted" style="font-size:11px; margin-top:8px;">Min 1 joueur. Ils répondent sur tableau blanc, tu cliques sur qui a juste.</p>
+      </div>
+
       <div id="teams-config" style="display:none; margin-top:14px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
           <label style="margin:0;">Équipes <span id="teams-count-badge" style="color:var(--gold); font-family:'Fraunces'; font-weight:900; font-size:15px; margin-left:6px;">2</span></label>
@@ -1827,6 +1881,13 @@ input.code-input {
           <button class="btn ghost" id="c-replay" disabled>↺ Rejouer</button>
           <button class="btn" style="background:var(--gold);color:#1a0800;" id="c-bonus">🎁 Bonus</button>
         </div>
+      </div>
+
+      <!-- Panneau validation présentiel (visible seulement en mode présentiel) -->
+      <div id="presentiel-validate-panel" style="display:none; margin-top:14px; padding:14px; background:var(--bg-soft); border:2px solid var(--mint); border-radius:14px;">
+        <div style="font-size:13px; font-weight:700; color:var(--mint); margin-bottom:10px;">✅ Qui a la bonne réponse ?</div>
+        <div id="presentiel-validate-list" style="display:flex; flex-direction:column; gap:6px;"></div>
+        <button class="btn ghost" id="presentiel-nobody-btn" style="margin-top:8px; width:100%; font-size:12px;">Personne n'a juste</button>
       </div>
 
       <!-- Panneau bonus points -->
@@ -2260,7 +2321,10 @@ const State = {
   selectedPlaylistData: null,
   soireeSelectedIds: new Set(),
   soireePlaylistId: null,
-  ttsEnabled: false, // ids des playlists sélectionnées en mode soirée
+  ttsEnabled: false,
+  presentielMode: false,
+  presentielPlayers: [],
+  hardMode: false, // ids des playlists sélectionnées en mode soirée
   hostMode: true,   // true = écran d'affichage public ; false = l'hôte joue aussi
   isRestartMode: false,
   usedIndexes: new Set(),
@@ -3302,6 +3366,13 @@ function startCreate(mode) {
 
   // Reset lecture vocale
   $('opt-tts-toggle').classList.remove('on');
+  // Reset mode présentiel
+  $('opt-presentiel-toggle').classList.remove('on');
+  $('presentiel-players-config').style.display = 'none';
+  $('presentiel-players-list').innerHTML = '';
+  updatePresentielCount();
+  // Reset mode difficile
+  $('opt-hard-toggle').classList.remove('on');
 
   if (State.isRestartMode) {
     $('create-launch').textContent = '🔄 Relancer la partie';
@@ -3769,6 +3840,15 @@ $('create-launch').addEventListener('click', async () => {
 
   // Lecture vocale
   State.ttsEnabled = $('opt-tts-toggle').classList.contains('on');
+  State.hardMode = $('opt-hard-toggle').classList.contains('on');
+
+  // Mode présentiel
+  State.presentielMode = $('opt-presentiel-toggle').classList.contains('on');
+  if (State.presentielMode) {
+    const ppList = readPresentielPlayers();
+    if (!ppList.length) { toast('⚠ Ajoute au moins un joueur'); return; }
+    State.presentielPlayers = ppList;
+  }
 
   // Pseudo + emoji : forcés si mode hôte affichage, sinon saisis
   if (hostMode) {
@@ -3790,6 +3870,10 @@ $('create-launch').addEventListener('click', async () => {
   } else {
     try {
       await createRoom();
+      // Mode présentiel : créer les joueurs dans Firebase immédiatement
+      if (State.presentielMode && State.presentielPlayers?.length) {
+        await createPresentielPlayersInFirebase(State.presentielPlayers);
+      }
       showControlModalThenLobby();
     } catch (e) {
       toast("Impossible de créer la salle : " + e.message);
@@ -3799,8 +3883,8 @@ $('create-launch').addEventListener('click', async () => {
 
 // Affiche la modale "prends le contrôle" si mode buzzer+hôte, sinon va direct au lobby
 function showControlModalThenLobby() {
-  // Modale utile uniquement si mode buzzer + hôte affichage (sinon pas de contrôle distant)
-  if (State.mode !== 'buzzer' || !State.hostMode) {
+  // Modale si : mode buzzer + hôte affichage, OU mode présentiel (l'animateur pilote tout depuis son tel)
+  if ((State.mode !== 'buzzer' || !State.hostMode) && !State.presentielMode) {
     showScreen('lobby');
     return;
   }
@@ -3869,7 +3953,7 @@ async function createRoom() {
     host: State.uid,
     hostName: State.hostName,
     hostEmoji: State.hostEmoji,
-    hostMode: State.hostMode,    // true = écran public ; false = hôte joueur
+    hostMode: State.hostMode,
     createdAt: serverTimestamp(),
     controlPin: State.controlPin,
     controllerUid: null,
@@ -3883,6 +3967,8 @@ async function createRoom() {
     teams: State.teamsConfig.enabled
       ? State.teamsConfig.list.reduce((acc, t) => { acc[t.id] = t; return acc; }, {})
       : null,
+    presentielMode: State.presentielMode || false,
+    hardMode: State.hardMode || false,
     phase: 'lobby',
     round: {
       status: 'idle', question: '', choices: null, correct: -1, answer: '', number: 0,
@@ -4032,6 +4118,9 @@ function listenRoom(code) {
       leaveAll(); showScreen('menu'); return;
     }
     State.lastState = data;
+  // Synchroniser les flags depuis Firebase (utile pour le contrôle distant)
+  if (data.presentielMode !== undefined) State.presentielMode = data.presentielMode;
+  if (data.hardMode !== undefined) State.hardMode = data.hardMode;
     render();
   }, (err) => toast("Perte de connexion : " + err.message));
 }
@@ -4670,8 +4759,10 @@ async function nextQcmRound() {
   }, 200);
 
   // Au bout du timer : révéler + attendre revealSec + next
+  // En mode présentiel : juste stopper le timer, l'hôte révèle manuellement
   State.qcmLoop.nextStateTimeout = setTimeout(async () => {
     if (!State.qcmLoop.running) return;
+    if (State.presentielMode) return; // présentiel : révélation manuelle
     try { await revealAnswer(); } catch (e) { console.error(e); }
     State.qcmLoop.nextStateTimeout = setTimeout(() => {
       if (!State.qcmLoop.running) return;
@@ -5127,7 +5218,8 @@ function render() {
   detectDynEvents(data);
 
   // 5) Auto-reveal QCM : quand tous les joueurs ont répondu → révéler immédiatement
-  if (isHostLike() && data.mode === 'qcm' && data.round?.status === 'armed') {
+  // Désactivé en mode présentiel (tout est manuel)
+  if (!State.presentielMode && isHostLike() && data.mode === 'qcm' && data.round?.status === 'armed') {
     const players = Object.values(data.players || {})
       .filter(p => !p.isHost || !data.hostMode);
     const totalAnswers = Object.keys(data.answers || {}).length;
@@ -5409,9 +5501,19 @@ function renderProjection(data) {
     State._lastBuzzerQuestion = null;
   }
 
-  // Choix QCM
+  // Question masquée par l'animateur (mode présentiel)
+  if (data.questionHidden && round.status !== 'revealed') {
+    $('proj-question').textContent = '🙈 Question masquée';
+    $('proj-question').style.opacity = '0.35';
+  } else {
+    $('proj-question').style.opacity = '';
+  }
+
+  // Choix QCM — cachés en mode difficile ou si question masquée
   const qcmBox = $('proj-qcm-choices');
-  if (data.mode === 'qcm' && round.question && Array.isArray(round.choices)) {
+  const showChoices = data.mode === 'qcm' && round.question && Array.isArray(round.choices)
+    && !data.hardMode  // mode difficile : pas de choix
+  if (showChoices) {
     qcmBox.style.display = '';
     const voteCounts = [0,0,0,0];
     Object.values(data.answers || {}).forEach((a) => {
@@ -5423,7 +5525,6 @@ function renderProjection(data) {
         if (i === round.correct) cls += ' correct';
         else cls += ' wrong';
       }
-      // Votes : visibles UNIQUEMENT après révélation (évite de trahir les choix en cours)
       const votes = voteCounts[i];
       const showVotes = round.status === 'revealed' && votes > 0;
       return `<div class="${cls}">
@@ -5505,6 +5606,8 @@ function renderControl(data) {
   }
 
   renderScoreboard('c-scores', data);
+  // Mode présentiel : panneau de validation après révélation
+  if (State.presentielMode) renderPresentielValidate();
   // Rafraîchir le panneau bonus si ouvert
   if (bonusPanelOpen) renderBonusPlayers();
 }
@@ -5671,8 +5774,11 @@ function renderPlayerQcm(data) {
   // Mise à jour du timer côté joueur (calculé à partir de openedAt local)
   updatePlayerCountdown(data);
 
+  // Mode difficile ou présentiel : cacher les choix côté joueur
+  grid.style.display = (data.hardMode || data.presentielMode) ? 'none' : '';
+
   const buttons = grid.querySelectorAll('.qcm-btn');
-  if (Array.isArray(round.choices) && round.choices.length === 4) {
+  if (!data.hardMode && !data.presentielMode && Array.isArray(round.choices) && round.choices.length === 4) {
     round.choices.forEach((c, i) => {
       const btn = buttons[i];
       btn.querySelector('.qcm-text').textContent = c;
@@ -6155,6 +6261,129 @@ async function computeAndShowStats(data) {
         </div>`).join('')}
     </div>`;
 }
+
+// ============================================================
+//  MODE PRÉSENTIEL
+// ============================================================
+let presentielPlayers = []; // [{ id, name, emoji, score }]
+let presentielPtsPerCorrect = 100; // points fixe par bonne réponse
+
+// Toggle mode difficile
+$('opt-hard-toggle').addEventListener('click', () => {
+  $('opt-hard-toggle').classList.toggle('on');
+});
+
+// Toggle mode présentiel
+$('opt-presentiel-toggle').addEventListener('click', () => {
+  const tog = $('opt-presentiel-toggle');
+  tog.classList.toggle('on');
+  const on = tog.classList.contains('on');
+  $('presentiel-players-config').style.display = on ? '' : 'none';
+  // Désactiver les modes incompatibles
+  if (on) {
+    $('opt-teams-toggle').classList.remove('on');
+    $('teams-config').style.display = 'none';
+  }
+});
+
+// Ajouter un joueur présentiel
+const PRESENTIEL_EMOJIS = ['⚡','🔥','🦁','🐯','🐻','🦊','🐺','🐸','🦄','🐼','👾','🤖','🎯','🎮','🏆'];
+let presentielIdCounter = 0;
+
+function addPresentielPlayer(name = '', emoji = '') {
+  const id = 'pp_' + (presentielIdCounter++);
+  const defaultEmoji = PRESENTIEL_EMOJIS[presentielIdCounter % PRESENTIEL_EMOJIS.length];
+  const row = document.createElement('div');
+  row.className = 'presentiel-player-row';
+  row.dataset.id = id;
+  row.innerHTML = `
+    <span class="pp-emoji">${emoji || defaultEmoji}</span>
+    <input type="text" placeholder="Nom du joueur…" maxlength="20" value="${escapeHtml(name)}">
+    <button class="pp-del">✕</button>
+  `;
+  row.querySelector('.pp-del').addEventListener('click', () => {
+    row.remove();
+    updatePresentielCount();
+  });
+  $('presentiel-players-list').appendChild(row);
+  updatePresentielCount();
+  if (!name) row.querySelector('input').focus();
+}
+
+function updatePresentielCount() {
+  const n = $('presentiel-players-list').querySelectorAll('.presentiel-player-row').length;
+  $('presentiel-count').textContent = n;
+}
+
+$('btn-add-presentiel-player').addEventListener('click', () => addPresentielPlayer());
+
+// Lire les joueurs présentiel depuis le formulaire
+function readPresentielPlayers() {
+  const rows = $('presentiel-players-list').querySelectorAll('.presentiel-player-row');
+  return [...rows].map((row, i) => ({
+    id: row.dataset.id || ('pp_' + i),
+    name: (row.querySelector('input')?.value || '').trim() || `Joueur ${i+1}`,
+    emoji: row.querySelector('.pp-emoji')?.textContent || '⚡',
+    score: 0,
+    isPresental: true,
+  })).filter(p => p.name);
+}
+
+// Créer les joueurs dans Firebase au lancement
+async function createPresentielPlayersInFirebase(players) {
+  const updates = {};
+  players.forEach(p => {
+    updates['rooms/' + State.roomCode + '/players/' + p.id] = {
+      name: p.name, emoji: p.emoji, score: 0,
+      isPresental: true, ready: true,
+    };
+  });
+  await update(ref(db), updates);
+}
+
+// Panneau de validation présentiel (affiché après révélation)
+function renderPresentielValidate() {
+  const panel = $('presentiel-validate-panel');
+  if (!State.presentielMode) { panel.style.display = 'none'; return; }
+  const data = State.lastState;
+  const round = data?.round;
+  // Afficher dès que la question est active (armée ou révélée) — pas besoin d'attendre la révélation
+  if (!round || round.status === 'idle') { panel.style.display = 'none'; return; }
+
+  panel.style.display = '';
+  const list = $('presentiel-validate-list');
+  const players = Object.entries(data.players || {})
+    .map(([uid, p]) => ({ uid, ...p }))
+    .sort((a, b) => (b.score || 0) - (a.score || 0));
+
+  // Points fixes en mode présentiel : tout le monde lève le tableau en même temps
+  const pts = 100 * (round.doublePoints ? 2 : 1);
+
+  list.innerHTML = '';
+  players.forEach(p => {
+    const btn = document.createElement('button');
+    btn.className = 'presentiel-validate-btn';
+    btn.innerHTML = `
+      <span class="pv-emoji">${p.emoji || '⚡'}</span>
+      <span class="pv-name">${escapeHtml(p.name)}</span>
+      <span class="pv-score">${p.score || 0} pts</span>
+      <span class="pv-pts">+${pts}</span>
+    `;
+    btn.addEventListener('click', async () => {
+      const newScore = (p.score || 0) + pts;
+      await update(ref(db, 'rooms/' + State.roomCode + '/players/' + p.uid), { score: newScore });
+      showDynMsg(`✅ <b>${escapeHtml(p.name)}</b> a la bonne réponse ! +${pts} pts`, 2500);
+      toast(`+${pts} pts → ${p.name}`);
+      setTimeout(renderPresentielValidate, 400);
+    });
+    list.appendChild(btn);
+  });
+}
+
+$('presentiel-nobody-btn').addEventListener('click', () => {
+  $('presentiel-validate-panel').style.display = 'none';
+  toast('Personne n\'a juste — on continue');
+});
 
 // Boutons podium
 $('podium-home').addEventListener('click', () => { leaveAll(); showScreen('menu'); });
